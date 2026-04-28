@@ -1,5 +1,7 @@
 import 'package:go_router/go_router.dart';
-import 'package:flutter/material.dart';
+// import 'package:flutter/material.dart';
+import '../../views/splash/splash_screen.dart';
+import '../../views/costomer/order_option_page.dart';
 // import file disini
 
 class AppRouter {
@@ -9,8 +11,14 @@ class AppRouter {
     routes: [
       GoRoute(
         path: '/splash',
-        builder: (context, state) => const Scaffold(body: Center(child: Text("Splash Screen"))),
+        builder: (context, state) => const SplashScreen(),
       ),
+      
+      GoRoute(
+        path: '/welcome',
+        builder: (context, state) => const WelcomeScreen(),
+      ),
+      
     ],
   );
 }
