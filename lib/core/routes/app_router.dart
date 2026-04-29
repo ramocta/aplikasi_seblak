@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 // import 'package:flutter/material.dart';
 import '../../views/splash/splash_screen.dart';
 import '../../views/costomer/order_option_page.dart';
+import '../../views/costomer/table_number_screen.dart';
 // import file disini
 
 class AppRouter {
@@ -17,6 +18,11 @@ class AppRouter {
       GoRoute(
         path: '/welcome',
         builder: (context, state) => const WelcomeScreen(),
+      ),
+
+      GoRoute(
+        path: '/table-number',
+        builder: (context, state) => const TableNumberScreen(),
       ),
       
     ],
