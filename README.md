@@ -1,6 +1,6 @@
 # seblak_say_cafe
 
-A new Flutter project.
+Project Aplikasi Seblak Say Cafe Kelompok 1.
 
 ## Getting Started
 
