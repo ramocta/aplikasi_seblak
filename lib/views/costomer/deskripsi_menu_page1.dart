@@ -13,9 +13,9 @@ class Topping {
 
 const Map<String, List<Topping>> toppingData = {
   'Krecek': [
-    Topping('Krecek Krispy', 1500),
-    Topping('Krecek Basah', 1000),
-    Topping('Ceker Ayam', 2000),
+    Topping('Kerupuk Seblak', 2000),
+    Topping('Kerupuk Warna Warni', 2000),
+    Topping('Kerupuk Rafael', 2000),
   ],
   'Frozenfood': [
     Topping('Dumpling Ayam', 2000),
@@ -26,9 +26,9 @@ const Map<String, List<Topping>> toppingData = {
     Topping('Tahu Crispy', 1500),
   ],
   'Others': [
-    Topping('Telur Ceplok', 2500),
-    Topping('Keju', 3000),
-    Topping('Mie Extra', 1500),
+    Topping('Telur Ayam', 3000),
+    Topping('Sayur', 1000),
+    Topping('Mie', 2000),
   ],
 };
 
@@ -37,7 +37,7 @@ const Map<String, List<Topping>> toppingData = {
 // ─────────────────────────────────────────
 
 class DeskripsiMenuSeblak extends StatefulWidget {
-  final MenuItem item;
+  final FoodItem item;
   const DeskripsiMenuSeblak({super.key, required this.item});
 
   @override
@@ -276,7 +276,9 @@ class _DeskripsiMenuSeblakState extends State<DeskripsiMenuSeblak> {
   }
 
   // Bottom bar: total harga + tombol Add to cart
-  Widget _buildBottomBar() {
+  Widget _buildBottomBar(
+
+) {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
       decoration: const BoxDecoration(
@@ -300,6 +302,7 @@ class _DeskripsiMenuSeblakState extends State<DeskripsiMenuSeblak> {
                       fontWeight: FontWeight.w700,
                       color: Color(0xFF111111))),
             ],
+            
           ),
           const SizedBox(height: 10),
           // Tombol Add to cart
