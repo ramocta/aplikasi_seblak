@@ -1,0 +1,56 @@
+name: seblak_say_cafe
+description: "A collaborative group project for Seblak Say Cafe ordering system."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.8
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Ikon bawaan
+  cupertino_icons: ^1.0.8
+
+  # 1. State Management & Utilities
+  # Digunakan untuk manajemen status aplikasi dan navigasi simpel
+  get: ^4.6.6
+
+  # 2. Navigasi Profesional
+  # Digunakan untuk mengatur rute Admin dan Customer secara terpisah
+  go_router: ^13.2.0
+
+  # 3. Networking
+  # Digunakan untuk mengambil data dari backend PHP (API)
+  dio: ^5.4.1
+
+  # 4. Desain & Font
+  # Agar tampilan aplikasi estetik dengan font profesional
+  google_fonts: ^6.2.1
+
+  # 5. Ikon Tambahan
+  # Untuk ikon khusus seperti WhatsApp atau kategori makanan
+  font_awesome_flutter: ^10.7.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+
+  # Jangan lupa aktifkan bagian assets jika Anda sudah memiliki gambar
+  assets:
+    - assets/images/
+    # - assets/logos/
+
+  # Contoh jika ingin mendaftarkan font lokal manual (opsional karena ada google_fonts)
+  # fonts:
+  #   - family: Poppins
+  #     fonts:
+  #       - asset: assets/fonts/Poppins-Regular.ttf
+  #       - asset: assets/fonts/Poppins-Bold.ttf
+  #         weight: 700
