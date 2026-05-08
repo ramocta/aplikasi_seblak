@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:seblak_say_cafe/views/costomer/cart_page.dart';
 import '../../../models/cart_models.dart';
-import '../cart_page.dart';
 
 // ─── DATA MODEL ───────────────────────────────────────────
 

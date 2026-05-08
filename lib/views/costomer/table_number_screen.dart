@@ -70,7 +70,7 @@ class TableNumberScreen extends StatelessWidget {
                     child: TextField(
                       textAlign: TextAlign.center,
                       keyboardType: TextInputType.number,
-                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                       onChanged: (val) => controller.tableNumber.value = val,
                       decoration: const InputDecoration(
                         border: InputBorder.none,
