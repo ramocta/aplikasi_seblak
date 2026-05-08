@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import 'package:flutter/material.dart';
 <<<<<<< HEAD
 import 'package:get/get.dart';
@@ -51,3 +52,5 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+=======
+>>>>>>> 51062fdf0287a14486e37430abf11def2a60ae9b
