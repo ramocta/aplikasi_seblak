@@ -10,6 +10,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+<<<<<<< HEAD
+=======
+  google_fonts: ^6.1.0
+>>>>>>> c3be4c19ac696da81cdfe5757a7c9a30358faf54
 
   # Ikon bawaan
   cupertino_icons: ^1.0.8
