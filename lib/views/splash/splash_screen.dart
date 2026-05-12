@@ -18,7 +18,7 @@ class _SplashScreenState extends State<SplashScreen> {
     // Logika untuk pindah ke halaman Welcome setelah 3 detik
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
-        context.go('/welcome'); 
+        context.go('/dashboard'); 
       }
     });
   }
