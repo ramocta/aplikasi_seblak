@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../views/splash/splash_screen.dart';
 import '../../views/costomer/order_option_page.dart';
 import '../../views/costomer/table_number_screen.dart';
-import '../../views/costomer/menu_page1.dart';
+import '../../views/costomer/katalog_menu.dart';
 // import file disini
 
 class AppRouter {
@@ -28,7 +28,7 @@ class AppRouter {
 
       GoRoute(
         path: '/menu',
-        builder: (context, state) => const MenuPage(),
+        builder: (context, state) => const  MenuPage(),
       ),
       
     ],

@@ -1,7 +1,7 @@
 // lib/views/costomer/cart_page.dart
 
 import 'package:flutter/material.dart';
-import '../../models/cart_models.dart';
+import '../../../models/cart_models.dart';
 import 'checkout_page.dart';
 
 class CartPage extends StatefulWidget {

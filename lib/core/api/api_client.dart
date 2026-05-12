@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import '../constans/app_constans.dart';
+import '../constans/api_constans.dart';
 
 class ApiClient {
   static final Dio _dio = Dio(

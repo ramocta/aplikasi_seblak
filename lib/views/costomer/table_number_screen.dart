@@ -5,6 +5,7 @@ import 'package:seblak_say_cafe/core/constans/app_color.dart';
 import 'package:seblak_say_cafe/core/constans/app_assets.dart' show AppAssets;
 import '../../controllers/order_controller.dart';
 import 'package:seblak_say_cafe/views/widgets/header_clipper.dart';
+import 'package:seblak_say_cafe/views/widgets/custom_button.dart';
 
 class TableNumberScreen extends StatelessWidget {
   const TableNumberScreen({super.key});
@@ -17,25 +18,22 @@ class TableNumberScreen extends StatelessWidget {
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          // HEADER PUTIH DENGAN ELLIPS (Sesuai kode WelcomeScreen Anda)
+          // HEADER PUTIH DENGAN ELLIPS
           ClipPath(
             clipper: HeaderClipper(),
             child: Container(
               height: MediaQuery.of(context).size.height * 0.38,
               color: AppColors.primary,
-              child: Stack( // Gunakan stack di dalam header untuk tombol back
+              child: Stack(
                 children: [
                   Center(
-                    child: Image.asset(
-                      AppAssets.logo1, 
-                      width: 400
-                    ),
+                    child: Image.asset(AppAssets.logo1, width: 400),
                   ),
                   Positioned(
                     top: 50,
                     left: 20,
                     child: IconButton(
-                      icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
                       onPressed: () => context.pop(),
                     ),
                   ),
@@ -54,12 +52,12 @@ class TableNumberScreen extends StatelessWidget {
                   const Text(
                     "Enter your table number", 
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                   ),
                   
                   const SizedBox(height: 30),
                   
-                  // INPUT NOMOR MEJA (Pengganti Row Opsi)
+                  // INPUT NOMOR MEJA
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     decoration: BoxDecoration(
@@ -71,7 +69,8 @@ class TableNumberScreen extends StatelessWidget {
                       textAlign: TextAlign.center,
                       keyboardType: TextInputType.number,
                       style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                      onChanged: (val) => controller.tableNumber.value = val,
+                      // ✅ DIGANTI DENGAN setTableNumber
+                      onChanged: (value) => controller.setTableNumber(value),
                       decoration: const InputDecoration(
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.symmetric(vertical: 15),
@@ -83,31 +82,35 @@ class TableNumberScreen extends StatelessWidget {
                   const Text(
                     "Please enter the number listed on your table. This helps our team deliver your Seblak faster!",
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey, fontSize: 11)
+                    style: TextStyle(color: Colors.grey, fontSize: 11),
                   ),
 
                   const Spacer(),
 
-                  // BUTTON CONFIRM
-                  Obx(() => SizedBox(
-                    width: double.infinity,
-                    height: 55,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: controller.tableNumber.value.isNotEmpty 
-                            ? AppColors.primary 
-                            : Colors.grey[200],
-                        foregroundColor: controller.tableNumber.value.isNotEmpty 
-                            ? Colors.white 
-                            : Colors.grey[500],
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))
+                  // BUTTON
+                  Obx(() {
+                    final bool isReady = controller.isTableNumberValid;
+
+                    return Center(
+                      child: Opacity(
+                        opacity: isReady ? 1.0 : 0.5,
+                        child: CustomButton(
+                          text: "Save",
+                          onPressed: isReady 
+                            ? () => context.push('/menu') 
+                            : () {
+                                Get.snackbar(
+                                  "Input Meja", 
+                                  "Silahkan isi nomor meja yang valid (1-20)",
+                                  snackPosition: SnackPosition.BOTTOM,
+                                  backgroundColor: Colors.redAccent,
+                                  colorText: Colors.white,
+                                );
+                              },
+                        ),
                       ),
-                      onPressed: controller.tableNumber.value.isNotEmpty 
-                        ? () => context.push('/menu') 
-                        : null,
-                      child: const Text("Save", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    ),
-                  )),
+                    );
+                  }),
                   const SizedBox(height: 40),
                 ],
               ),

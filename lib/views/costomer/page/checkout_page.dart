@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../models/cart_models.dart';
+import '../../../models/cart_models.dart';
 
 class CheckoutPage extends StatefulWidget {
   const CheckoutPage({super.key});

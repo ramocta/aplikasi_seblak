@@ -5,6 +5,8 @@ import 'package:seblak_say_cafe/core/constans/app_color.dart';
 import 'package:seblak_say_cafe/core/constans/app_assets.dart' show AppAssets;
 import '../../controllers/order_controller.dart';
 import 'package:seblak_say_cafe/views/widgets/header_clipper.dart';
+// Import file tempat CustomButton berada
+import 'package:seblak_say_cafe/views/widgets/custom_button.dart'; 
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -14,15 +16,15 @@ class WelcomeScreen extends StatelessWidget {
     final controller = Get.put(OrderController());
 
     return Scaffold(
-      backgroundColor: Colors.white, // Background sama dengan ellips nanti
+      backgroundColor: Colors.white,
       body: Column(
         children: [
           // HEADER PUTIH DENGAN ELLIPS
           ClipPath(
-            clipper: HeaderClipper(), // Memanggil class clipper di atas
+            clipper: HeaderClipper(),
             child: Container(
               height: MediaQuery.of(context).size.height * 0.38,
-              color: AppColors.primary, // Warna background header
+              color: AppColors.primary,
               child: Center(child: Image.asset(AppAssets.logo1, width: 400)),
             ),
           ),
@@ -30,7 +32,7 @@ class WelcomeScreen extends StatelessWidget {
           Expanded(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 30),
-              color: Colors.white, // Bagian bawah putih sesuai figma
+              color: Colors.white,
               child: Column(
                 children: [
                   const SizedBox(height: 40),
@@ -68,32 +70,24 @@ class WelcomeScreen extends StatelessWidget {
 
                   const Spacer(),
 
-                  // BUTTON CONTINUE
+                  // IMPLEMENTASI CUSTOM BUTTON
                   Obx(
-                    () => SizedBox(
-                      width: double.infinity,
-                      height: 55,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: controller.isOrderTypeSelected
-                              ? AppColors.primary
-                              : Colors.grey[200],
-                          foregroundColor: controller.isOrderTypeSelected
-                              ? Colors.white
-                              : Colors.grey[500],
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                        ),
-                        onPressed: controller.isOrderTypeSelected
-                            ? () => context.push(controller.getNextRoute())
-                            : null,
-                        child: const Text(
-                          "Continue",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
+                    () => Center( // Gunakan Center agar bayangan tombol tidak terpotong
+                      child: Opacity(
+                        // Memberikan efek visual jika tombol belum aktif
+                        opacity: controller.isOrderTypeSelected ? 1.0 : 0.5,
+                        child: CustomButton(
+                          text: "Continue",
+                          onPressed: controller.isOrderTypeSelected
+                              ? () => context.push(controller.getNextRoute())
+                              : () {
+                                  // Feedback jika user klik saat belum pilih opsi
+                                  Get.snackbar(
+                                    "Pilih Opsi", 
+                                    "Silahkan pilih Dine In atau Take Away",
+                                    snackPosition: SnackPosition.BOTTOM
+                                  );
+                                },
                         ),
                       ),
                     ),
