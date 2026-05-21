@@ -1,14 +1,14 @@
 import 'package:go_router/go_router.dart';
-import 'package:seblak_say_cafe/views/costomer/cart_page.dart';
-import 'package:seblak_say_cafe/views/costomer/checkout_page.dart';
-import 'package:seblak_say_cafe/views/costomer/payment_qris_page.dart';
+import 'package:seblak_say_cafe/views/customer/cart_page.dart';
+import 'package:seblak_say_cafe/views/customer/checkout_page.dart';
+import 'package:seblak_say_cafe/views/customer/payment_qris_page.dart';
 import '../../views/splash/splash_screen.dart';
-import '../../views/costomer/order_option_page.dart';
-import '../../views/costomer/table_number_screen.dart';
-import '../../views/costomer/katalog_menu.dart';
-import '../../views/costomer/detail_menu.dart';
-import '../../views/costomer/detail_menu_seblak.dart';
-import '../../views/costomer/detail_transaction_page.dart';
+import '../../views/customer/order_option_page.dart';
+import '../../views/customer/table_number_screen.dart';
+import '../../views/customer/katalog_menu.dart';
+import '../../views/customer/detail_menu.dart';
+import '../../views/customer/detail_menu_seblak.dart';
+import '../../views/customer/detail_transaction_page.dart';
 import '../../models/transaction_models.dart';
 
 class AppRouter {
