@@ -1,31 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class ItemMenu extends StatelessWidget {
+  final int id;
   final String namaMenu;
   final int harga;
   final String gambarUrl;
+  final int idKategoriMenu; // 1. TAMBAHKAN INI
 
   const ItemMenu({
     super.key,
+    required this.id,
     required this.namaMenu,
     required this.harga,
     required this.gambarUrl,
+    required this.idKategoriMenu, // 2. TAMBAHKAN INI
   });
 
   @override
   Widget build(BuildContext context) {
+    print('gambarUrl = $gambarUrl');
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.only(bottom: 12),
       decoration: const BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Color(0xFFD9D9D9), width: 1),
-        ),
+        border: Border(bottom: BorderSide(color: Color(0xFFD9D9D9), width: 1)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Gambar Menu dengan Efek Bayangan
+          // Gambar Menu
           Container(
             width: 85,
             height: 85,
@@ -38,16 +42,13 @@ class ItemMenu extends StatelessWidget {
                   color: Color(0x3F000000),
                   blurRadius: 4,
                   offset: Offset(0, 4),
-                  spreadRadius: 0,
-                )
+                ),
               ],
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(13),
               child: Image.network(
                 gambarUrl,
-                width: 85,
-                height: 85,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) => Container(
                   color: Colors.grey[300],
@@ -58,13 +59,12 @@ class ItemMenu extends StatelessWidget {
           ),
           const SizedBox(width: 20),
 
-          // Area Konten (Nama Menu & Harga + Tombol Add)
+          // Area Konten
           Expanded(
             child: SizedBox(
               height: 85,
               child: Stack(
                 children: [
-                  // Nama & Harga (Alignment sesuai referensi)
                   Positioned(
                     left: 0,
                     top: 10,
@@ -76,17 +76,15 @@ class ItemMenu extends StatelessWidget {
                           style: const TextStyle(
                             color: Color(0xFF121212),
                             fontSize: 13,
-                            fontFamily: 'Roboto',
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const SizedBox(height: 12), // Jarak antara Nama dan Harga
+                        const SizedBox(height: 12),
                         Text(
                           'Rp $harga',
                           style: const TextStyle(
                             color: Color(0xFF121212),
                             fontSize: 14,
-                            fontFamily: 'Roboto',
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -94,63 +92,73 @@ class ItemMenu extends StatelessWidget {
                     ),
                   ),
 
-                  // Tombol Add di Kanan Bawah
+                  // ==================== TOMBOL ADD (LOGIKA KATEGORI) ====================
                   Positioned(
                     right: 0,
                     bottom: 0,
                     child: GestureDetector(
                       onTap: () {
-                        print("Add $namaMenu to cart");
+                        // Data yang akan dikirim ke halaman detail
+                        final Map<String, dynamic> menuData = {
+                          'id': id,
+                          'namaMenu': namaMenu,
+                          'harga': harga,
+                          'gambarUrl': gambarUrl,
+                        };
+
+                        if (idKategoriMenu == 1) {
+                          // Navigasi ke detail seblak jika kategori ID = 1
+                          context.push('/detail-seblak/$id', extra: menuData);
+                        } else {
+                          // Navigasi ke detail menu biasa untuk kategori lainnya
+                          context.push('/detail-menu/$id', extra: menuData);
+                        }
                       },
-                      child: SizedBox(
-                        width: 52,
-                        height: 32,
-                        child: Stack(
-                          children: [
-                            // Border Oranye Luar
-                            Container(
-                              width: 52,
-                              height: 32,
-                              decoration: ShapeDecoration(
-                                color: const Color(0x7FDE3905),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                              ),
-                            ),
-                            // Konten Putih Dalam
-                            Positioned(
-                              left: 1,
-                              top: 1,
-                              child: Container(
-                                width: 50,
-                                height: 30,
-                                decoration: ShapeDecoration(
-                                  color: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                ),
-                                child: const Center(
-                                  child: Text(
-                                    'Add',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 11,
-                                      fontFamily: 'Roboto',
-                                      fontWeight: FontWeight.w400,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      child: _buildAddButton(),
                     ),
                   ),
                 ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAddButton() {
+    return SizedBox(
+      width: 52,
+      height: 32,
+      child: Stack(
+        children: [
+          Container(
+            width: 52,
+            height: 32,
+            decoration: ShapeDecoration(
+              color: const Color(0x7FDE3905),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 1,
+            top: 1,
+            child: Container(
+              width: 50,
+              height: 30,
+              decoration: ShapeDecoration(
+                color: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+              child: const Center(
+                child: Text(
+                  'Add',
+                  style: TextStyle(color: Colors.black, fontSize: 11),
+                ),
               ),
             ),
           ),

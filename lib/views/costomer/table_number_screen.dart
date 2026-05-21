@@ -26,9 +26,7 @@ class TableNumberScreen extends StatelessWidget {
               color: AppColors.primary,
               child: Stack(
                 children: [
-                  Center(
-                    child: Image.asset(AppAssets.logo1, width: 400),
-                  ),
+                  Center(child: Image.asset(AppAssets.logo1, width: 400)),
                   Positioned(
                     top: 50,
                     left: 20,
@@ -41,7 +39,7 @@ class TableNumberScreen extends StatelessWidget {
               ),
             ),
           ),
-          
+
           Expanded(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 30),
@@ -50,13 +48,13 @@ class TableNumberScreen extends StatelessWidget {
                 children: [
                   const SizedBox(height: 40),
                   const Text(
-                    "Enter your table number", 
+                    "Enter your table number",
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                   ),
-                  
+
                   const SizedBox(height: 30),
-                  
+
                   // INPUT NOMOR MEJA
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -68,7 +66,10 @@ class TableNumberScreen extends StatelessWidget {
                     child: TextField(
                       textAlign: TextAlign.center,
                       keyboardType: TextInputType.number,
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                       // ✅ DIGANTI DENGAN setTableNumber
                       onChanged: (value) => controller.setTableNumber(value),
                       decoration: const InputDecoration(
@@ -96,17 +97,17 @@ class TableNumberScreen extends StatelessWidget {
                         opacity: isReady ? 1.0 : 0.5,
                         child: CustomButton(
                           text: "Save",
-                          onPressed: isReady 
-                            ? () => context.push('/menu') 
-                            : () {
-                                Get.snackbar(
-                                  "Input Meja", 
-                                  "Silahkan isi nomor meja yang valid (1-20)",
-                                  snackPosition: SnackPosition.BOTTOM,
-                                  backgroundColor: Colors.redAccent,
-                                  colorText: Colors.white,
-                                );
-                              },
+                          onPressed: isReady
+                              ? () => context.push('/menu')
+                              : () {
+                                  Get.snackbar(
+                                    "Input Meja",
+                                    "Silahkan isi nomor meja yang valid (1-20)",
+                                    snackPosition: SnackPosition.BOTTOM,
+                                    backgroundColor: Colors.redAccent,
+                                    colorText: Colors.white,
+                                  );
+                                },
                         ),
                       ),
                     );
@@ -115,7 +116,7 @@ class TableNumberScreen extends StatelessWidget {
                 ],
               ),
             ),
-          )
+          ),
         ],
       ),
     );

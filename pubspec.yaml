@@ -15,80 +15,56 @@ dependencies:
   cupertino_icons: ^1.0.8
 
   # 1. State Management & Utilities
-  # Digunakan untuk manajemen status aplikasi dan navigasi simpel
   get: ^4.6.6
 
   # 2. Navigasi Profesional
-  # Digunakan untuk mengatur rute Admin dan Customer secara terpisah
   go_router: ^13.2.0
 
   # 3. Networking
-  # Digunakan untuk mengambil data dari backend PHP (API)
   dio: ^5.4.1
 
   # 4. Desain & Font
-  # Agar tampilan aplikasi estetik dengan font profesional
   google_fonts: ^6.2.1
 
   # 5. Ikon Tambahan
-  # Untuk ikon khusus seperti WhatsApp atau kategori makanan
   font_awesome_flutter: ^10.7.0
 
   # 6. Local Storage
-  # Menyimpan token login, data user, dll
   shared_preferences: ^2.2.2
 
   # 7. Date Formatting
-  # Untuk format tanggal transaksi
   intl: ^0.19.0
 
   # 8. Image Cache
-  # Agar gambar menu lebih cepat dimuat
   cached_network_image: ^3.3.1
 
   # 9. QR Code Generator
-  # Untuk menampilkan QR pembayaran
   qr_flutter: ^4.1.0
 
   # 10. Environment Variable
-  # Untuk menyimpan BASE_URL API dan config lainnya
   flutter_dotenv: ^5.1.0
 
   # 11. Dio Logger
-  # Membantu debugging request API
   pretty_dio_logger: ^1.3.1
 
   # 12. JSON Serialization
-  # Membantu convert JSON API menjadi model Dart
   json_annotation: ^4.9.0
+  get_storage: ^2.1.1
+
+  # ✅ 13. Image Picker — untuk upload bukti pembayaran QRIS
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
   flutter_lints: ^3.0.0
-
-  # Generator untuk json_serializable
   build_runner: ^2.4.9
-
-  # Auto generate model from JSON
   json_serializable: ^6.8.0
 
 flutter:
   uses-material-design: true
 
-  # Assets gambar
   assets:
     - assets/images/
-    # - assets/logos/
-
-  # File environment
     - .env
-
-  # Contoh font lokal manual (opsional)
-  # fonts:
-  #   - family: Poppins
-  #     fonts:
-  #       - asset: assets/fonts/Poppins-Regular.ttf
-  #       - asset: assets/fonts/Poppins-Bold.ttf
-  #         weight: 700

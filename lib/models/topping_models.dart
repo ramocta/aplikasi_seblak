@@ -8,8 +8,9 @@ class ToppingModels {
   final String gambarUrl;
   final String lastUpdate;
   final KategoriToppingModels kategoritopping;
+  int selectedQuantity;
 
-  ToppingModels ({
+  ToppingModels({
     required this.id,
     required this.nama,
     required this.harga,
@@ -17,21 +18,42 @@ class ToppingModels {
     required this.gambarUrl,
     required this.lastUpdate,
     required this.kategoritopping,
+    this.selectedQuantity = 0,
   });
 
-  factory ToppingModels.fromJson(
-      Map<String, dynamic> json) {
-    return ToppingModels(
-      id: json['id'],
-      nama: json['nama'],
-      harga: json['harga'],
-      stok: json['stok'],
-      gambarUrl: json['gambar_url'],
-      lastUpdate: json['last_update'],
+  /// 🔴 SHORTCUT GETTER: Menyembuhkan error di ToppingController
+  /// Mengambil ID kategori langsung dari objek relasi di bawahnya
+  int get idKategoriTopping => kategoritopping.id;
 
+  factory ToppingModels.fromJson(Map<String, dynamic> json) {
+    return ToppingModels(
+      id: json['id'] ?? 0,
+      nama: json['nama'] ?? '',
+      harga: json['harga'] ?? 0,
+      stok: json['stok'] ?? 0,
+      // Mengamankan pembacaan key snake_case dari Laravel maupun camelCase dari GetStorage lokal
+      gambarUrl: json['gambar_url'] ?? json['gambarUrl'] ?? '',
+      lastUpdate: json['last_update'] ?? json['lastUpdate'] ?? '-',
+      selectedQuantity: json['selected_quantity'] ?? json['selectedQuantity'] ?? 0,
+      
+      // Mengamankan nested object kategori agar tidak crash jika salah satu bernilai null
       kategoritopping: KategoriToppingModels.fromJson(
-        json['kategori'],
+        json['kategori'] ?? json['kategoritopping'] ?? {'id': 0, 'nama': ''},
       ),
     );
+  }
+
+  /// ✅ PERBAIKAN: Menyimpan objek utuh kategori agar saat dibaca ulang oleh GetStorage tidak null
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'nama': nama,
+      'harga': harga,
+      'stok': stok,
+      'gambarUrl': gambarUrl,
+      'lastUpdate': lastUpdate,
+      'selectedQuantity': selectedQuantity,
+      'kategoritopping': kategoritopping.toJson(), // 🔴 WAJIB: Ikut disimpan dalam bentuk Map
+    };
   }
 }

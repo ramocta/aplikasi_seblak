@@ -1,10 +1,12 @@
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:seblak_say_cafe/services/menu_services.dart';
 import '../models/menu_models.dart';
 import '../models/kategori_menu_models.dart';
 
 class MenuController extends GetxController {
   final MenuService _menuService = MenuService();
+  final GetStorage _localStorage = GetStorage();
 
   var listCategories = <KategoriMenuModels>[].obs;
   var listMenu = <MenuModels>[].obs;
@@ -12,63 +14,97 @@ class MenuController extends GetxController {
   var isLoading = false.obs;
   var errorMessage = ''.obs;
 
-  // ==================== CACHE ====================
+  // Cache Memory RAM untuk perpindahan antar kategori yang cepat
   final Map<int, List<MenuModels>> _menuCache = {};
 
   @override
   void onInit() {
     super.onInit();
-    initialLoad();
+    // 🚀 Langsung dieksekusi di background saat Order Option Page terbuka
+    initialLoad(); 
   }
 
   Future<void> initialLoad() async {
     try {
-      isLoading(false);
       errorMessage.value = '';
 
-      final categories = await _menuService.getAllCategories();
+      // =======================================================================
+      // 1. STRATEGI INSTAN: MUAT DATA DARI STORAGE LOKAL (0 Milidetik)
+      // =======================================================================
+      final List<dynamic>? cachedCategories = _localStorage.read('categories');
+      final List<dynamic>? cachedFirstMenu = _localStorage.read('first_menu');
 
-      if (categories.isEmpty) {
-        errorMessage.value = "Belum ada kategori menu yang dibuat.";
-        return;
+      if (cachedCategories != null && cachedFirstMenu != null) {
+        print("🚀 [Menu] Memuat data offline dari lokal storage (Instan)...");
+        
+        listCategories.assignAll(cachedCategories.map((e) => KategoriMenuModels.fromJson(e)).toList());
+        selectedCategoryId.value = listCategories[0].id;
+        
+        final localMenus = cachedFirstMenu.map((e) => MenuModels.fromJson(e)).toList();
+        listMenu.assignAll(localMenus);
+        _menuCache[selectedCategoryId.value] = List.from(localMenus);
+        
+        // Matikan loading karena data lokal lama sudah siap dilihat oleh user
+        isLoading(false);
+      } else {
+        // Jika cache benar-benar kosong (install baru), aktifkan loading indicator
+        isLoading(true);
       }
 
-      listCategories.assignAll(categories);
-      selectedCategoryId.value = categories[0].id;
+      // =======================================================================
+      // 2. STRATEGI LATAR BELAKANG: AMBIL DATA FRESH DARI LARAVEL (PARALEL)
+      // =======================================================================
+      print("🌐 [Menu] Menyinkronkan data kategori dari server Laravel...");
+      final categories = await _menuService.getAllCategories();
 
-      await fetchMenuByCategory(selectedCategoryId.value);
+      if (categories.isNotEmpty) {
+        listCategories.assignAll(categories);
+        selectedCategoryId.value = categories[0].id;
+        
+        // Simpan pembaruan daftar kategori ke lokal storage
+        _localStorage.write('categories', categories.map((e) => e.toJson()).toList());
+
+        // Ambil data menu fresh untuk kategori pertama secara silent sync
+        final result = await _menuService.getMenuByCategory(categories[0].id);
+        
+        listMenu.assignAll(result);
+        _menuCache[categories[0].id] = List.from(result);
+
+        // Simpan pembaruan menu ke lokal storage
+        _localStorage.write('first_menu', result.map((e) => e.toJson()).toList());
+        print("✅ [Menu] Sinkronisasi background selesai. Data diperbarui.");
+      }
     } catch (e) {
-      errorMessage.value = "Gagal terhubung ke server.";
-      print("Error initialLoad: $e");
+      print("❌ Error initialLoad Menu: $e");
+      if (listMenu.isEmpty) {
+        errorMessage.value = "Gagal terhubung ke server.";
+      }
     } finally {
       isLoading(false);
     }
   }
 
-  /// Fetch menu dengan caching
+  /// Ambil menu ketika user memilih atau berpindah kategori di katalog
   Future<void> fetchMenuByCategory(int categoryId) async {
-    // Cek cache dulu
+    // Jika data kategori ini sudah pernah dibuka, ambil langsung dari RAM (0 ms)
     if (_menuCache.containsKey(categoryId)) {
-      print("📦 Mengambil dari cache untuk kategori $categoryId");
+      print("Mengambil dari cache internal untuk kategori $categoryId");
       listMenu.assignAll(_menuCache[categoryId]!);
       return;
     }
 
     try {
-      isLoading(false);
+      isLoading(true);
       errorMessage.value = '';
 
-      print("🌐 Fetching dari API untuk kategori $categoryId");
-
+      print("🌐 Fetching API untuk kategori baru: $categoryId");
       final result = await _menuService.getMenuByCategory(categoryId);
-
+      
       listMenu.assignAll(result);
-      _menuCache[categoryId] = List.from(result); // Simpan ke cache
-
-      print("✅ Berhasil memuat ${result.length} menu (kategori $categoryId)");
+      _menuCache[categoryId] = List.from(result); // Amankan ke cache RAM
     } catch (e) {
       errorMessage.value = "Gagal memuat menu.";
-      print("Error fetchMenuByCategory: $e");
+      print("❌ Error fetchMenuByCategory: $e");
       listMenu.clear();
     } finally {
       isLoading(false);
@@ -77,18 +113,12 @@ class MenuController extends GetxController {
 
   Future<void> changeCategory(int id) async {
     if (selectedCategoryId.value == id) return;
-
     selectedCategoryId.value = id;
     await fetchMenuByCategory(id);
   }
 
-  // Optional: Clear cache jika perlu refresh data
-  void clearCache() {
-    _menuCache.clear();
-  }
-
   Future<void> refreshData() async {
-    clearCache();
+    _menuCache.clear();
     await initialLoad();
   }
 }
