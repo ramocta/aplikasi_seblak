@@ -23,7 +23,7 @@ class MenuController extends GetxController {
 
   Future<void> initialLoad() async {
     try {
-      isLoading(false);
+      isLoading(true); 
       errorMessage.value = '';
 
       final categories = await _menuService.getAllCategories();
@@ -34,7 +34,10 @@ class MenuController extends GetxController {
       }
 
       listCategories.assignAll(categories);
-      selectedCategoryId.value = categories[0].id;
+      
+      if (selectedCategoryId.value == 0) {
+        selectedCategoryId.value = categories[0].id;
+      }
 
       await fetchMenuByCategory(selectedCategoryId.value);
     } catch (e) {
@@ -55,7 +58,7 @@ class MenuController extends GetxController {
     }
 
     try {
-      isLoading(false);
+      isLoading(true); 
       errorMessage.value = '';
 
       print("🌐 Fetching dari API untuk kategori $categoryId");
@@ -78,13 +81,40 @@ class MenuController extends GetxController {
   Future<void> changeCategory(int id) async {
     if (selectedCategoryId.value == id) return;
 
+    // 🔥 PENTING: Sebelum pindah kategori, amankan dulu perubahan stok list saat ini ke dalam cache!
+    if (selectedCategoryId.value != 0 && listMenu.isNotEmpty) {
+      _menuCache[selectedCategoryId.value] = List.from(listMenu);
+    }
+
     selectedCategoryId.value = id;
     await fetchMenuByCategory(id);
   }
 
-  // Optional: Clear cache jika perlu refresh data
+  // ==================== TAMBAHAN FUNGSI HAPUS MENU ====================
+  Future<void> deleteMenu(int id) async {
+    try {
+      isLoading(true);
+      
+      final bool isSuccess = await _menuService.deleteMenu(id);
+      
+      if (isSuccess) {
+        clearCache();
+        await initialLoad();
+      } else {
+        throw "Gagal menghapus menu. Respon server tidak valid.";
+      }
+    } catch (e) {
+      print("Error pas deleteMenu di Controller: $e");
+      rethrow; 
+    } finally {
+      isLoading(false);
+    }
+  }
+
+  // Clear cache jika perlu refresh data
   void clearCache() {
     _menuCache.clear();
+    print("🧹 Cache menu berhasil dibersihkan");
   }
 
   Future<void> refreshData() async {

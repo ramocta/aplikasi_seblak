@@ -7,11 +7,11 @@ class KategoriMenuModels {
     required this.nama,
   });
 
-  factory KategoriMenuModels.fromJson(Map<String, dynamic> json) {
+    factory KategoriMenuModels.fromJson(Map<String, dynamic> json) {
     return KategoriMenuModels(
-      // Perbaikan utama
-      id: json['id_kategori_menu'] ?? json['id'] ?? 0,
-      nama: json['nama']?.toString() ?? '',
+      // Tambahkan int.tryParse untuk memastikan tipe data selalu int
+      id: int.tryParse(json['id_kategori_menu']?.toString() ?? json['id']?.toString() ?? '0') ?? 0,
+      nama: json['nama']?.toString() ?? 'Kategori Tidak Dikenal',
     );
   }
 

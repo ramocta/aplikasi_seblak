@@ -7,31 +7,50 @@ class ToppingModels {
   final int stok;
   final String gambarUrl;
   final String lastUpdate;
-  final KategoriToppingModels kategoritopping;
+  final KategoriToppingModels? kategoritopping; 
 
-  ToppingModels ({
+  ToppingModels({
     required this.id,
     required this.nama,
     required this.harga,
     required this.stok,
     required this.gambarUrl,
     required this.lastUpdate,
-    required this.kategoritopping,
+    this.kategoritopping,
   });
 
-  factory ToppingModels.fromJson(
-      Map<String, dynamic> json) {
+  factory ToppingModels.fromJson(Map<String, dynamic> json) {
     return ToppingModels(
-      id: json['id'],
-      nama: json['nama'],
-      harga: json['harga'],
-      stok: json['stok'],
-      gambarUrl: json['gambar_url'],
-      lastUpdate: json['last_update'],
+      // SINKRONKAN DENGAN FIELD MYSQL LARAVEL: id_topping & nama_topping
+      id: json['id_topping'] ?? json['id'] ?? 0,
+      nama: json['nama_topping']?.toString() ?? json['nama']?.toString() ?? '', 
+      harga: int.tryParse(json['harga'].toString()) ?? 0,
+      stok: int.tryParse(json['stok'].toString()) ?? 0,
+      gambarUrl: json['gambar_url']?.toString() ?? '', 
+      lastUpdate: json['last_update']?.toString() ?? '',
+      kategoritopping: json['kategori'] != null 
+          ? KategoriToppingModels.fromJson(json['kategori']) 
+          : null,
+    );
+  }
 
-      kategoritopping: KategoriToppingModels.fromJson(
-        json['kategori'],
-      ),
+  ToppingModels copyWith({
+    int? id,
+    String? nama,
+    int? harga,
+    int? stok,
+    String? gambarUrl,
+    String? lastUpdate,
+    KategoriToppingModels? kategoritopping,
+  }) {
+    return ToppingModels(
+      id: id ?? this.id,
+      nama: nama ?? this.nama,
+      harga: harga ?? this.harga,
+      stok: stok ?? this.stok,
+      gambarUrl: gambarUrl ?? this.gambarUrl,
+      lastUpdate: lastUpdate ?? this.lastUpdate,
+      kategoritopping: kategoritopping ?? this.kategoritopping,
     );
   }
 }
