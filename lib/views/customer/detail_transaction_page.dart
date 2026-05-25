@@ -136,6 +136,7 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent, // Transparan agar menyatu dengan background body
         elevation: 0,
+        scrolledUnderElevation: 0, 
         toolbarHeight: 70, // Memberikan ruang vertikal yang pas bagi logo
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xFFDE3905)),
@@ -143,7 +144,7 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
         ),
         title: Padding(
           padding: const EdgeInsets.only(top: 12.0),
-          child: Image.asset(AppAssets.logo2, height: 48, fit: BoxFit.contain), // Ukuran logo yang proporsional
+          child: Image.asset(AppAssets.logo2, height: 100, fit: BoxFit.contain), // Ukuran logo yang proporsional
         ),
         centerTitle: true,
       ),

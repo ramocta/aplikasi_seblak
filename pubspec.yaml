@@ -54,6 +54,8 @@ dependencies:
   # ✅ 13. Image Picker — untuk upload bukti pembayaran QRIS
   image_picker: ^1.1.2
 
+  gal: ^2.3.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

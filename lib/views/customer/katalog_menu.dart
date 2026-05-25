@@ -20,51 +20,45 @@ class MenuPage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.page,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        leading: Padding(
+          padding: const EdgeInsets.only(top: 8.0),
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back, color: AppColors.primary),
+            onPressed: () => context.pop(),
+          ),
+        ),
+        centerTitle: true,
+        title: Padding(
+          padding: const EdgeInsets.only(top: 12.0),
+          child: Image.asset(AppAssets.logo2, height: 90, fit: BoxFit.contain),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(top: 8.0, right: 8.0),
+            child: IconButton(
+              icon: const Icon(Icons.menu, color: AppColors.primary, size: 28),
+              onPressed: () {},
+            ),
+          ),
+        ],
+      ),
       body: Stack(
         children: [
           // ==================== KONTEN UTAMA ====================
           Column(
             children: [
-              // HEADER (Back, Logo, Menu)
-              Container(
-                padding: const EdgeInsets.only(
-                  top: 20,
-                  left: 16,
-                  right: 16,
-                  bottom: 8,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    IconButton(
-                      icon: const Icon(
-                        Icons.arrow_back,
-                        color: AppColors.primary,
-                      ),
-                      onPressed: () => context.pop(),
-                    ),
-                    Image.asset(
-                      AppAssets.logo2,
-                      height: 80,
-                    ), // Sesuaikan ukuran logo
-                    IconButton(
-                      icon: const Icon(
-                        Icons.menu,
-                        color: AppColors.primary,
-                        size: 28,
-                      ),
-                      onPressed: () {},
-                    ),
-                  ],
-                ),
-              ),
+              const SizedBox(height: 15),
 
               // BANNER PROMO
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16),
-                height: 160,
+                height: 150,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(13),
                   image: DecorationImage(
                     image: AssetImage(AppAssets.bannerPromo),
                     fit: BoxFit.cover,
@@ -72,14 +66,14 @@ class MenuPage extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
 
-              // KONTEN MENU (Table Number + Kategori + List)
+              // KONTEN MENU
               Expanded(
                 child: MenuRectangle(
                   child: Obx(() {
                     if (controller.isLoading.value &&
-                        controller.listMenu.isEmpty) {
+                        controller.listCategories.isEmpty) {
                       return const Center(child: CircularProgressIndicator());
                     }
 
@@ -87,40 +81,57 @@ class MenuPage extends StatelessWidget {
                       return _buildErrorState(controller);
                     }
 
+                    if (controller.tabController == null ||
+                        controller.listCategories.isEmpty) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    final tabController = controller.tabController!;
                     return Column(
                       children: [
                         const TableNumber(),
-                        _buildCategoryNav(controller),
 
-                        // LIST MENU
+                        // 1. NAVIGASI DI TENGAH & BISA DI-SCROLL
+                        _buildCenteredCategoryNav(controller, tabController),
+
+                        // 2. HALAMAN MENU YANG BISA DI-GESER (SWIPEABLE)
                         Expanded(
-                          child: Stack(
-                            children: [
-                              controller.listMenu.isEmpty
-                                  ? const Center(
-                                      child: Text(
-                                        "There are no items for this category",
-                                      ),
-                                    )
-                                  : ListView.builder(
-                                      padding: const EdgeInsets.only(
-                                        left: 16,
-                                        right: 16,
-                                        bottom: 80,
-                                      ),
-                                      itemCount: controller.listMenu.length,
-                                      itemBuilder: (context, index) {
-                                        final menu = controller.listMenu[index];
-                                        return ItemMenu(
-                                          id: menu.id,
-                                          namaMenu: menu.nama,
-                                          harga: menu.harga,
-                                          gambarUrl: menu.gambarUrl,
-                                          idKategoriMenu: menu.kategorimenu.id,
-                                        );
-                                      },
-                                    ),
-                            ],
+                          child: TabBarView(
+                            controller: tabController,
+                            physics: const BouncingScrollPhysics(),
+                            children: controller.listCategories.map((category) {
+                              // ✅ OPTIMASI: Ambil dari cache langsung tanpa filtering
+                              final filteredMenu = controller
+                                  .getMenusByCategory(category.id);
+
+                              if (filteredMenu.isEmpty) {
+                                return const Center(
+                                  child: Text(
+                                    "There are no items for this category",
+                                  ),
+                                );
+                              }
+
+                              return ListView.builder(
+                                physics: const ClampingScrollPhysics(),
+                                padding: const EdgeInsets.only(
+                                  left: 16,
+                                  right: 16,
+                                  bottom: 90,
+                                ),
+                                itemCount: filteredMenu.length,
+                                itemBuilder: (context, index) {
+                                  final menu = filteredMenu[index];
+                                  return ItemMenu(
+                                    id: menu.id,
+                                    namaMenu: menu.nama,
+                                    harga: menu.harga,
+                                    gambarUrl: menu.gambarUrl,
+                                    idKategoriMenu: menu.kategorimenu.id,
+                                  );
+                                },
+                              );
+                            }).toList(),
                           ),
                         ),
                       ],
@@ -141,7 +152,6 @@ class MenuPage extends StatelessWidget {
                 clipBehavior: Clip.none,
                 alignment: Alignment.center,
                 children: [
-                  // 1. Tombol Utama (Selalu Ada)
                   SizedBox(
                     width: double.infinity,
                     child: CustomButton(
@@ -149,26 +159,15 @@ class MenuPage extends StatelessWidget {
                       onPressed: () => context.push('/cart'),
                     ),
                   ),
-
-                  // 2. Badge Merah (Hanya muncul jika totalItems > 0)
                   if (cartController.totalItems > 0)
                     Positioned(
-                      // Mengatur posisi badge tepat di pojok kanan atas tombol
                       top: -8,
                       right: 15,
                       child: Container(
                         padding: const EdgeInsets.all(6),
                         decoration: const BoxDecoration(
                           color: Colors.red,
-                          shape: BoxShape
-                              .circle, // Solusi untuk BoxType tidak terdefinisi
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black26,
-                              blurRadius: 4,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
+                          shape: BoxShape.circle,
                         ),
                         constraints: const BoxConstraints(
                           minWidth: 28,
@@ -196,6 +195,53 @@ class MenuPage extends StatelessWidget {
     );
   }
 
+  // WIDGET NAVIGASI DITENGAH & OTOMATIS IKUT BERGESER
+  Widget _buildCenteredCategoryNav(
+    my_ctrl.MenuController controller,
+    TabController tabController,
+  ) {
+    return Container(
+      height: 45,
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      alignment: Alignment.center,
+      child: TabBar(
+        isScrollable: true,
+        controller: tabController,
+        indicator: const BoxDecoration(),
+        labelPadding: const EdgeInsets.symmetric(horizontal: 6),
+        dividerColor: Colors.transparent,
+        tabAlignment: TabAlignment.center,
+        onTap: (index) {
+          final catId = controller.listCategories[index].id;
+          controller.changeCategory(catId);
+        },
+        tabs: controller.listCategories.map((cat) {
+          return Obx(() {
+            final bool isActive = controller.selectedCategoryId.value == cat.id;
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+              decoration: BoxDecoration(
+                color: isActive
+                    ? const Color(0xFFE53935)
+                    : const Color(0xFFF3F3F3),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                cat.nama,
+                style: TextStyle(
+                  color: isActive ? Colors.white : Colors.grey[700],
+                  fontSize: 14,
+                  fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                ),
+              ),
+            );
+          });
+        }).toList(),
+      ),
+    );
+  }
+
   Widget _buildErrorState(my_ctrl.MenuController controller) {
     return Center(
       child: Column(
@@ -210,50 +256,6 @@ class MenuPage extends StatelessWidget {
             child: const Text("Coba Lagi"),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildCategoryNav(my_ctrl.MenuController controller) {
-    return Container(
-      height: 45,
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: Obx(
-        () => ListView.builder(
-          scrollDirection: Axis.horizontal,
-          shrinkWrap: true,
-          itemCount: controller.listCategories.length,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          itemBuilder: (context, index) {
-            final cat = controller.listCategories[index];
-            final bool isActive = controller.selectedCategoryId.value == cat.id;
-
-            return GestureDetector(
-              onTap: () => controller.changeCategory(cat.id),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 100),
-                margin: const EdgeInsets.only(right: 10),
-                padding: const EdgeInsets.symmetric(horizontal: 22),
-                decoration: BoxDecoration(
-                  color: isActive
-                      ? const Color(0xFFE53935)
-                      : const Color(0xFFF3F3F3),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Center(
-                  child: Text(
-                    cat.nama,
-                    style: TextStyle(
-                      color: isActive ? Colors.white : Colors.grey[700],
-                      fontSize: 14,
-                      fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
       ),
     );
   }

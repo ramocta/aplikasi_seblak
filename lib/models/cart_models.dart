@@ -12,6 +12,19 @@ class ToppingItem {
     this.quantity = 0,
   });
 
+  /// Create a copy with updated fields (useful for edit mode)
+  ToppingItem copyWith({
+    int? id,
+    String? nama,
+    int? harga,
+    int? quantity,
+  }) => ToppingItem(
+    id: id ?? this.id,
+    nama: nama ?? this.nama,
+    harga: harga ?? this.harga,
+    quantity: quantity ?? this.quantity,
+  );
+
   factory ToppingItem.fromJson(Map<String, dynamic> json) {
     return ToppingItem(
        id: json['id'] ?? 0,

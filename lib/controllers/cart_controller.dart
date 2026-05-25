@@ -40,7 +40,9 @@ class CartController extends GetxController {
 
   void updateCartItemAt(int cartIndex, CartItem updatedItem) {
     if (cartIndex < 0 || cartIndex >= cartItems.length) return;
+    // ✅ Update dengan trigger untuk notify observers
     cartItems[cartIndex] = updatedItem;
+    cartItems.refresh(); // Force refresh untuk Obx widgets
   }
 
   // ✅ Bug 3 fix: hapus berdasarkan index, bukan ID
@@ -65,6 +67,10 @@ class CartController extends GetxController {
   });
 
   int get totalItems => cartItems.fold(0, (sum, item) => sum + item.quantity);
+
+  /// Get specific cart item by index
+  CartItem? getCartItemAt(int index) =>
+      index >= 0 && index < cartItems.length ? cartItems[index] : null;
 
   void updateQuantity(dynamic id, int newQuantity) {
     final index = cartItems.indexWhere(

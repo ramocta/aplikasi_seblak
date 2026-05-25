@@ -104,18 +104,20 @@ class _DetailMenuPageState extends State<DetailMenuPage> {
           Align(
             alignment: Alignment.bottomCenter,
             child: MenuRectangle(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 25,
-                  vertical: 30,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+              child: SizedBox(
+                height: 620,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 25,
+                    vertical: 30,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                     Text(
                       data['namaMenu'] ?? 'Menu',
                       style: const TextStyle(
-                        fontSize: 26,
+                        fontSize: 22,
                         fontWeight: FontWeight.bold,
                         fontFamily: 'Roboto',
                       ),
@@ -236,6 +238,7 @@ class _DetailMenuPageState extends State<DetailMenuPage> {
                 ),
               ),
             ),
+          ),
           ),
         ],
       ),

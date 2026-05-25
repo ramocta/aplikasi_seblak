@@ -47,6 +47,9 @@ class _DetailMenuSeblakPageState extends State<DetailMenuSeblakPage> {
         });
 
         if (editMode) {
+          // ✅ Skip sync dari server saat edit mode
+          toppingController.skipServerSync = true;
+          
           final List? savedToppings = extra['selectedToppings'] as List?;
           if (savedToppings != null && savedToppings.isNotEmpty) {
             ever(toppingController.listTopping, (_) {
@@ -58,6 +61,11 @@ class _DetailMenuSeblakPageState extends State<DetailMenuSeblakPage> {
                 }
               }
             });
+            
+            // ✅ Restore quantities dari saved toppings untuk quick update
+            toppingController.restoreQuantitiesFromSaved(
+              savedToppings.map((t) => t is ToppingItem ? {'id': t.id, 'quantity': t.quantity} : t).toList()
+            );
           }
         }
       } else {
@@ -128,68 +136,100 @@ class _DetailMenuSeblakPageState extends State<DetailMenuSeblakPage> {
           Align(
             alignment: Alignment.bottomCenter,
             child: MenuRectangle(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(25, 30, 25, 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      data['namaMenu'] ?? 'Opps.. Something went wrong',
-                      style: const TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      "Base price: Rp ${_parseHarga(data['harga'])}",
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 15),
-                    const Divider(color: Color(0xFFD9D9D9), thickness: 1),
-                    const SizedBox(height: 10),
-                    const Text(
-                      "Choose your toppings",
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+              child: SizedBox(
+                height: 620,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(25, 30, 25, 20),
+                  child: Obx(() {
+                    if (toppingController.isLoading.value &&
+                        toppingController.listCategories.isEmpty) {
+                      return const Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFFDE3905),
+                        ),
+                      );
+                    }
 
-                    _buildToppingCategoryNav(),
+                    if (toppingController.tabController == null ||
+                        toppingController.listCategories.isEmpty) {
+                      return const Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFFDE3905),
+                        ),
+                      );
+                    }
 
-                    Expanded(
-                      child: Obx(() {
-                        if (toppingController.isLoading.value) {
-                          return const Center(
-                            child: CircularProgressIndicator(
-                              color: Color(0xFFDE3905),
-                            ),
-                          );
-                        }
-                        if (toppingController.listTopping.isEmpty) {
-                          return const Center(child: Text("No toppings found"));
-                        }
-                        return ListView.builder(
-                          padding: const EdgeInsets.only(top: 10),
-                          itemCount: toppingController.listTopping.length,
-                          itemBuilder: (context, index) {
-                            final topping =
-                                toppingController.listTopping[index];
-                            return _buildToppingRow(topping);
-                          },
-                        );
-                      }),
-                    ),
+                    final tabController = toppingController.tabController!;
 
-                    const Divider(height: 30),
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          data['namaMenu'] ?? 'Opps.. Something went wrong',
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          "Base price: Rp ${_parseHarga(data['harga'])}",
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+                        const Divider(color: Color(0xFFD9D9D9), thickness: 1),
+                        const SizedBox(height: 10),
+                        const Text(
+                          "Choose your toppings",
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
 
-                    _buildFooterSection(),
-                  ],
+                        // 💡 1. NAVIGASI KATEGORI DI TENGAH
+                        _buildCenteredToppingNav(tabController),
+
+                        // 💡 2. LIST TOPPING YANG BISA DIGESER KESAMPING (SWIPEABLE)
+                        Expanded(
+                          child: TabBarView(
+                            controller: tabController,
+                            physics: const BouncingScrollPhysics(),
+                            children: toppingController.listCategories.map((
+                              category,
+                            ) {
+                              // ✅ OPTIMASI: Ambil dari cache langsung tanpa filtering
+                              final filteredToppings = toppingController
+                                  .getToppingsByCategory(category.id);
+
+                              if (filteredToppings.isEmpty) {
+                                return const Center(
+                                  child: Text("No toppings found"),
+                                );
+                              }
+
+                              return ListView.builder(
+                                physics: const ClampingScrollPhysics(),
+                                padding: const EdgeInsets.only(top: 10),
+                                itemCount: filteredToppings.length,
+                                itemBuilder: (context, index) {
+                                  final topping = filteredToppings[index];
+                                  return _buildToppingRow(topping);
+                                },
+                              );
+                            }).toList(),
+                          ),
+                        ),
+
+                        const Divider(height: 30),
+                        _buildFooterSection(),
+                      ],
+                    );
+                  }),
                 ),
               ),
             ),
@@ -199,50 +239,47 @@ class _DetailMenuSeblakPageState extends State<DetailMenuSeblakPage> {
     );
   }
 
-  Widget _buildToppingCategoryNav() {
+  // WIDGET NAVIGASI TOPPING DI TENGAH & MENGIKUTI SWIPE
+  Widget _buildCenteredToppingNav(TabController tabController) {
     return Container(
-      height: 35,
+      height: 45,
       margin: const EdgeInsets.symmetric(vertical: 8),
-      child: Obx(
-        () => ListView.builder(
-          scrollDirection: Axis.horizontal,
-          shrinkWrap: true,
-          itemCount: toppingController.listCategories.length,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          itemBuilder: (context, index) {
-            final cat = toppingController.listCategories[index];
-            return Obx(() {
-              final bool isActive =
-                  toppingController.selectedCategoryId.value == cat.id;
-              return GestureDetector(
-                onTap: () => toppingController.changeCategory(cat.id),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 100),
-                  margin: const EdgeInsets.only(right: 10),
-                  padding: const EdgeInsets.symmetric(horizontal: 22),
-                  decoration: BoxDecoration(
-                    color: isActive
-                        ? const Color(0xFFDE3905)
-                        : const Color(0xFFF3F3F3),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Center(
-                    child: Text(
-                      cat.nama,
-                      style: TextStyle(
-                        color: isActive ? Colors.white : Colors.grey[700],
-                        fontSize: 14,
-                        fontWeight: isActive
-                            ? FontWeight.bold
-                            : FontWeight.w500,
-                      ),
-                    ),
-                  ),
+      alignment: Alignment.center,
+      child: TabBar(
+        isScrollable: true,
+        controller: tabController,
+        indicator: const BoxDecoration(),
+        labelPadding: const EdgeInsets.symmetric(horizontal: 6),
+        dividerColor: Colors.transparent,
+        tabAlignment: TabAlignment.center,
+        onTap: (index) {
+          final catId = toppingController.listCategories[index].id;
+          toppingController.changeCategory(catId);
+        },
+        tabs: toppingController.listCategories.map((cat) {
+          return Obx(() {
+            final bool isActive =
+                toppingController.selectedCategoryId.value == cat.id;
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
+              decoration: BoxDecoration(
+                color: isActive
+                    ? const Color(0xFFDE3905)
+                    : const Color(0xFFF3F3F3),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                cat.nama,
+                style: TextStyle(
+                  color: isActive ? Colors.white : Colors.grey[700],
+                  fontSize: 14,
+                  fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
                 ),
-              );
-            });
-          },
-        ),
+              ),
+            );
+          });
+        }).toList(),
       ),
     );
   }
@@ -357,7 +394,6 @@ class _DetailMenuSeblakPageState extends State<DetailMenuSeblakPage> {
         ),
         const SizedBox(height: 15),
         CustomButton(
-          // ✅ Label tombol berubah sesuai mode
           text: isEditMode ? "Update Cart" : "Add to Cart",
           onPressed: _handleAddToCart,
         ),

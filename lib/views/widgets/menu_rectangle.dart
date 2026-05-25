@@ -9,7 +9,7 @@ class MenuRectangle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity, // Responsif memenuhi lebar layar
-      height: 593, // Tinggi tetap konsisten
+      constraints: const BoxConstraints(minHeight: 593),
       decoration: const ShapeDecoration(
         color: Color(0xFFFFFEFE),
         shape: RoundedRectangleBorder(

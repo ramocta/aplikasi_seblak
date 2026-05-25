@@ -123,8 +123,8 @@ class PesananToppingItemModel {
           double.tryParse(json['harga_satuan'].toString()) ?? 0.0,
       subtotal: double.tryParse(json['subtotal'].toString()) ?? 0.0,
       namaTopping: json['topping'] != null
-          ? (json['topping']['nama'] ?? '')
-          : '',
+        ? (json['topping']['nama_topping'] ?? '')
+        : '',
     );
   }
 }

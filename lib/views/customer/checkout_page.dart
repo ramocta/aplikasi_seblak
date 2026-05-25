@@ -61,8 +61,8 @@ class CheckoutPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Logo Say Cafe di dalam box putih
-                    Center(child: Image.asset(AppAssets.logo2, height: 55)),
-                    const SizedBox(height: 28),
+                    Center(child: Image.asset(AppAssets.logo2, height: 90)),
+                    const SizedBox(height: 20),
 
                     // Input Nama Pemesan
                     const Text(

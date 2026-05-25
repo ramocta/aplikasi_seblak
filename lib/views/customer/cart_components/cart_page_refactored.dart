@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../controllers/cart_controller.dart';
-import 'cart_components/cart_header.dart';
-import 'cart_components/cart_action_bar.dart';
-import 'cart_components/cart_list_section.dart';
-import 'cart_components/checkout_section.dart';
+import '../../../controllers/cart_controller.dart';
+import '../cart_components/cart_header.dart';
+import '../cart_components/cart_action_bar.dart';
+import '../cart_components/cart_list_section.dart';
+import '../cart_components/checkout_section.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({super.key});

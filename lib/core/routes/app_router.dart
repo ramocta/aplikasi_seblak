@@ -45,7 +45,7 @@ class AppRouter {
       // ✅ Route dari CartPage mode edit untuk menu biasa
       // Semua data dibaca dari extra langsung di initState DetailMenuPage
       GoRoute(
-        path: '/detail/:menuId',
+        path: '/edit-detail-menu/:menuId',
         builder: (context, state) {
           final int menuId =
               int.tryParse(state.pathParameters['menuId'] ?? '0') ?? 0;
@@ -56,6 +56,15 @@ class AppRouter {
       // ✅ Route dari MenuPage untuk seblak — tanpa extra, tidak duplikat
       GoRoute(
         path: '/detail-seblak/:menuId',
+        builder: (context, state) {
+          final int menuId =
+              int.tryParse(state.pathParameters['menuId'] ?? '0') ?? 0;
+          return DetailMenuSeblakPage(id: menuId);
+        },
+      ),
+
+      GoRoute(
+        path: '/edit-detail-seblak/:menuId',
         builder: (context, state) {
           final int menuId =
               int.tryParse(state.pathParameters['menuId'] ?? '0') ?? 0;
