@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
-class CustomButton extends StatelessWidget {
+class CustomButton extends StatefulWidget {
   final String text;
-  final VoidCallback onPressed;
+  // ✅ Ubah menjadi nullable agar bisa pass null untuk state disabled
+  final VoidCallback? onPressed;
 
   const CustomButton({
     super.key,
@@ -11,55 +12,68 @@ class CustomButton extends StatelessWidget {
   });
 
   @override
+  State<CustomButton> createState() => _CustomButtonState();
+}
+
+class _CustomButtonState extends State<CustomButton> {
+  bool _isPressed = false;
+
+  // ✅ Button dianggap disabled jika onPressed null
+  bool get _isDisabled => widget.onPressed == null;
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        // Mengikuti margin TableNumber agar sejajar presisi
-        margin: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
-        width: double.infinity, // Mengikuti lebar layar seperti TableNumber
-        height: 45, // Disamakan tinggi 50 sesuai TableNumber
-        child: Stack(
-          children: [
-            // Layer Bayangan/Aksen
-            Positioned(
-              left: 4,
-              top: 4,
-              right: 0, // Menggunakan right agar bayangan ikut melebar secara responsif
-              child: Container(
-                height: 46,
+      onTapDown: _isDisabled ? null : (_) => setState(() => _isPressed = true),
+      onTapUp: _isDisabled ? null : (_) => setState(() => _isPressed = false),
+      onTapCancel: _isDisabled ? null : () => setState(() => _isPressed = false),
+      // ✅ onTap null saat disabled — tidak bisa diklik
+      onTap: _isDisabled ? null : widget.onPressed,
+      child: MouseRegion(
+        cursor: _isDisabled
+            ? SystemMouseCursors.forbidden
+            : SystemMouseCursors.click,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+          width: double.infinity,
+          height: 52,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                width: double.infinity,
+                height: 48,
                 decoration: ShapeDecoration(
-                  color: const Color(0x7FDE3905),
+                  // ✅ Warna abu-abu saat disabled, merah saat aktif
+                  color: _isDisabled
+                      ? Colors.grey[350]
+                      : _isPressed
+                          ? const Color(0xFFDE3905).withOpacity(0.9)
+                          : const Color(0xFFDE3905),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(13), // Radius 13 agar sama dengan TableNumber
+                    borderRadius: BorderRadius.circular(13),
+                  ),
+                ),
+                child: Center(
+                  child: AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 150),
+                    style: TextStyle(
+                      // ✅ Warna teks lebih pudar saat disabled
+                      color: _isDisabled
+                          ? Colors.grey[500]
+                          : const Color(0xFFEFEAEA),
+                      fontSize: 16,
+                      fontFamily: 'Rubik',
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: _isPressed ? 0.8 : 0.0,
+                    ),
+                    child: Text(widget.text),
                   ),
                 ),
               ),
-            ),
-            // Main Button
-            Container(
-              width: double.infinity,
-              height: 46,
-              decoration: ShapeDecoration(
-                color: const Color(0xFFDE3905),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(13), // Radius disamakan 13
-                ),
-              ),
-              child: Center(
-                child: Text(
-                  text,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Color(0xFFEFEAEA),
-                    fontSize: 16, // Ukuran font disamakan 16 seperti TableNumber
-                    fontFamily: 'Rubik',
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

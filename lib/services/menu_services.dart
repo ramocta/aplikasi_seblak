@@ -11,7 +11,9 @@ class MenuService {
   /// Mengambil semua kategori menu
   Future<List<KategoriMenuModels>> getAllCategories() async {
     try {
-      final response = await ApiClient.dio.get(ApiConstants.kategoriMenu);
+      final response = await ApiClient.dio.get(
+        ApiConstants.kategoriMenu,
+      ).timeout(const Duration(seconds: 15));
 
       print('✅ Get Categories Status: ${response.statusCode}');
 
@@ -22,7 +24,9 @@ class MenuService {
       return [];
     } on DioException catch (e) {
       print("❌ Error getAllCategories: ${e.response?.data ?? e.message}");
-      throw Exception('Gagal mengambil kategori: ${e.response?.data['message'] ?? e.message}');
+      throw Exception(
+        'Gagal mengambil kategori: ${e.response?.data['message'] ?? e.message}',
+      );
     } catch (e) {
       print("❌ Unexpected error getAllCategories: $e");
       throw Exception('Terjadi kesalahan saat mengambil kategori');
@@ -32,10 +36,9 @@ class MenuService {
   /// Mengambil menu berdasarkan kategori
   Future<List<MenuModels>> getMenuByCategory(int categoryId) async {
     try {
-      final response = await ApiClient.dio.get(
-        ApiConstants.menu,
-        queryParameters: {'kategori': categoryId},
-      ).timeout(const Duration(seconds: 8));
+      final response = await ApiClient.dio
+          .get(ApiConstants.menu, queryParameters: {'kategori': categoryId})
+          .timeout(const Duration(seconds: 15));
 
       print('✅ Get Menu Category $categoryId Status: ${response.statusCode}');
       print('Data length: ${(response.data['data'] as List?)?.length ?? 0}');
@@ -47,7 +50,9 @@ class MenuService {
       return [];
     } on DioException catch (e) {
       print("❌ Error getMenuByCategory: ${e.response?.data ?? e.message}");
-      throw Exception('Gagal mengambil menu: ${e.response?.data['message'] ?? e.message}');
+      throw Exception(
+        'Gagal mengambil menu: ${e.response?.data['message'] ?? e.message}',
+      );
     } catch (e) {
       print("❌ Unexpected error getMenuByCategory: $e");
       throw Exception('Terjadi kesalahan saat mengambil menu');
@@ -76,7 +81,9 @@ class MenuService {
       return response.statusCode == 201 || response.statusCode == 200;
     } on DioException catch (e) {
       print("❌ Error addMenu: ${e.response?.data ?? e.message}");
-      throw Exception('Gagal menambah menu: ${e.response?.data['message'] ?? e.message}');
+      throw Exception(
+        'Gagal menambah menu: ${e.response?.data['message'] ?? e.message}',
+      );
     }
   }
 
@@ -100,7 +107,9 @@ class MenuService {
       return response.statusCode == 200;
     } on DioException catch (e) {
       print("❌ Error updateMenu: ${e.response?.data ?? e.message}");
-      throw Exception('Gagal update menu: ${e.response?.data['message'] ?? e.message}');
+      throw Exception(
+        'Gagal update menu: ${e.response?.data['message'] ?? e.message}',
+      );
     }
   }
 
@@ -128,7 +137,9 @@ class MenuService {
       return response.statusCode == 200 || response.statusCode == 204;
     } on DioException catch (e) {
       print("❌ Error deleteMenu: ${e.response?.data ?? e.message}");
-      throw Exception('Gagal menghapus menu: ${e.response?.data['message'] ?? e.message}');
+      throw Exception(
+        'Gagal menghapus menu: ${e.response?.data['message'] ?? e.message}',
+      );
     }
   }
 }

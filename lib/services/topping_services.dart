@@ -1,37 +1,48 @@
-import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart'; // Untuk handle kIsWeb jika running di browser
-import 'package:shared_preferences/shared_preferences.dart'; // Handle token auth admin
 import 'package:seblak_say_cafe/core/api/api_client.dart';
 import 'package:seblak_say_cafe/core/constans/api_constans.dart';
-import '../models/topping_models.dart';
 import '../models/kategori_topping_models.dart';
+import '../models/topping_models.dart';
 
 class ToppingService {
-  // ==================== CUSTOMER / KASIR ====================
-
   /// Mengambil semua kategori topping
-  Future<List<KategoriToppingModels>> getAllToppingCategories() async {
+  Future<List<KategoriToppingModels>> getAllCategories() async {
     try {
-      final response = await ApiClient.dio.get(ApiConstants.kategoriTopping);
+      final response = await ApiClient.dio.get(
+        ApiConstants.kategoriTopping,
+      ). timeout(const Duration(seconds: 15));// Gunakan constant jika ada
+
+      print('✅ Get Topping Categories Status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         List data = response.data['data'] ?? [];
-        return data.map((json) => KategoriToppingModels.fromJson(json)).toList();
+        return data
+            .map((json) => KategoriToppingModels.fromJson(json))
+            .toList();
       }
       return [];
     } on DioException catch (e) {
-      throw Exception('Gagal mengambil kategori: ${e.response?.data['message'] ?? e.message}');
+      print("❌ Error getAllCategories: ${e.response?.data ?? e.message}");
+      throw Exception(
+        'Gagal mengambil kategori topping: ${e.response?.data['message'] ?? e.message}',
+      );
+    } catch (e) {
+      print("❌ Unexpected error getAllCategories: $e");
+      throw Exception('Terjadi kesalahan saat mengambil kategori topping');
     }
   }
 
   /// Mengambil topping berdasarkan kategori
   Future<List<ToppingModels>> getToppingByCategory(int categoryId) async {
     try {
-      final response = await ApiClient.dio.get(
-        ApiConstants.topping,
-        queryParameters: {'kategori': categoryId}, 
-      ).timeout(const Duration(seconds: 8));
+      final response = await ApiClient.dio
+          .get(ApiConstants.topping, queryParameters: {'kategori': categoryId})
+          .timeout(const Duration(seconds: 15));
+
+      print(
+        '✅ Get Topping Category $categoryId Status: ${response.statusCode}',
+      );
+      print('Data length: ${(response.data['data'] as List?)?.length ?? 0}');
 
       if (response.statusCode == 200) {
         List data = response.data['data'] ?? [];
@@ -39,10 +50,16 @@ class ToppingService {
       }
       return [];
     } on DioException catch (e) {
-      throw Exception('Gagal mengambil topping: ${e.response?.data['message'] ?? e.message}');
+      print("❌ Error getToppingByCategory: ${e.response?.data ?? e.message}");
+      throw Exception(
+        'Gagal mengambil topping: ${e.response?.data['message'] ?? e.message}',
+      );
+    } catch (e) {
+      print("❌ Unexpected error getToppingByCategory: $e");
+      throw Exception('Terjadi kesalahan saat mengambil topping');
     }
   }
-
+}
   // ==================== ADMIN ONLY ====================
 
   /// Tambah Topping Baru (Admin) - MENGGUNAKAN FORMDATA (MULTIPART)

@@ -6,7 +6,7 @@ import 'package:seblak_say_cafe/core/constans/app_assets.dart' show AppAssets;
 import '../../controllers/order_controller.dart';
 import 'package:seblak_say_cafe/views/widgets/header_clipper.dart';
 // Import file tempat CustomButton berada
-import 'package:seblak_say_cafe/views/widgets/custom_button.dart'; 
+import 'package:seblak_say_cafe/views/widgets/custom_button.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -72,7 +72,8 @@ class WelcomeScreen extends StatelessWidget {
 
                   // IMPLEMENTASI CUSTOM BUTTON
                   Obx(
-                    () => Center( // Gunakan Center agar bayangan tombol tidak terpotong
+                    () => Center(
+                      // Gunakan Center agar bayangan tombol tidak terpotong
                       child: Opacity(
                         // Memberikan efek visual jika tombol belum aktif
                         opacity: controller.isOrderTypeSelected ? 1.0 : 0.5,
@@ -83,9 +84,9 @@ class WelcomeScreen extends StatelessWidget {
                               : () {
                                   // Feedback jika user klik saat belum pilih opsi
                                   Get.snackbar(
-                                    "Pilih Opsi", 
+                                    "Pilih Opsi",
                                     "Silahkan pilih Dine In atau Take Away",
-                                    snackPosition: SnackPosition.BOTTOM
+                                    snackPosition: SnackPosition.BOTTOM,
                                   );
                                 },
                         ),
