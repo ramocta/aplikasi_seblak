@@ -213,9 +213,31 @@ void initTabController(int length) {
     await fetchMenuByCategory(id);
   }
 
-  /// Getter untuk ambil menu dari cache berdasarkan kategori ID (tanpa filtering redundan)
-  List<MenuModels> getMenusByCategory(int categoryId) {
-    return _menuCache[categoryId] ?? [];
+  // ==================== TAMBAHAN FUNGSI HAPUS MENU ====================
+  Future<void> deleteMenu(int id) async {
+    try {
+      isLoading(true);
+      
+      final bool isSuccess = await _menuService.deleteMenu(id);
+      
+      if (isSuccess) {
+        clearCache();
+        await initialLoad();
+      } else {
+        throw "Gagal menghapus menu. Respon server tidak valid.";
+      }
+    } catch (e) {
+      print("Error pas deleteMenu di Controller: $e");
+      rethrow; 
+    } finally {
+      isLoading(false);
+    }
+  }
+
+  // Clear cache jika perlu refresh data
+  void clearCache() {
+    _menuCache.clear();
+    print("🧹 Cache menu berhasil dibersihkan");
   }
 
   Future<void> refreshData() async {

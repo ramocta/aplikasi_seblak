@@ -3,14 +3,11 @@ class KategoriToppingModels {
   final String nama;
 
   KategoriToppingModels({
-
     required this.id,
     required this.nama,
-
   });
 
-  factory KategoriToppingModels.fromJson(
-      Map<String, dynamic> json) {
+  factory KategoriToppingModels.fromJson(Map<String, dynamic> json) {
     return KategoriToppingModels(
       id: json['id_kategori_topping']  ?? json['id'] ?? 0,
       nama: json['nama'] ?.toString() ?? '',
