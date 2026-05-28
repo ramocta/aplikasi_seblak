@@ -4,14 +4,14 @@ import 'package:go_router/go_router.dart';
 // Alias tetap dipakai supaya tidak bentrok dengan material.dart
 import 'package:seblak_say_cafe/controllers/menu_controller.dart' as menu_controller;
 
-class MenuPage extends StatefulWidget {
-  const MenuPage({super.key});
+class MenuPageAdmin extends StatefulWidget {
+  const MenuPageAdmin({super.key});
 
   @override
-  State<MenuPage> createState() => _MenuPageState();
+  State<MenuPageAdmin> createState() => _MenuPageAdminState();
 }
 
-class _MenuPageState extends State<MenuPage> {
+class _MenuPageAdminState extends State<MenuPageAdmin> {
   // Menginstansiasi GetX Controller di luar build method agar efisien
   final menu_controller.MenuController controller = Get.put(menu_controller.MenuController());
 

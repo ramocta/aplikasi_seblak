@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -662,5 +661,25 @@ class OrderController extends GetxController {
     } finally {
       isLoading(false);
     }
+  }
+
+  String getMenuSummary(Map<String, dynamic> order) {
+    var itemsList = order['pesanan_menus'] ?? order['items'] ?? order['pesanan'] ?? [];
+    if (itemsList is List && itemsList.isNotEmpty) {
+      var firstItem = itemsList[0];
+      String namaMenu = "Menu";
+      if (firstItem['menu'] != null && firstItem['menu']['nama_menu'] != null) {
+        namaMenu = firstItem['menu']['nama_menu'].toString();
+      } else if (firstItem['nama_menu'] != null) {
+        namaMenu = firstItem['nama_menu'].toString();
+      }
+      var qty = firstItem['qty'] ?? firstItem['jumlah'] ?? 1;
+      String summary = "$namaMenu (x$qty)";
+      if (itemsList.length > 1) {
+        summary += " (+${itemsList.length - 1} menu lainnya)";
+      }
+      return summary;
+    }
+    return "Menu Lainnya";
   }
 }

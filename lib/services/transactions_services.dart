@@ -85,11 +85,16 @@ class TransactionService {
     }
     throw Exception(response.data['message'] ?? 'Gagal membuat pesanan.');
   } on DioException catch (e) {
-    final message = e.response?.data?['message'] ??
-        e.response?.data?['errors']?.toString() ??
-        'Terjadi kesalahan jaringan.';
-    throw Exception(message);
-  }
+  // ✅ Tambah ini untuk lihat detail error
+  print("❌ Status: ${e.response?.statusCode}");
+  print("❌ Response: ${e.response?.data}");
+  print("❌ Message: ${e.message}");
+  
+  final message = e.response?.data?['message'] ??
+      e.response?.data?['errors']?.toString() ??
+      'Terjadi kesalahan jaringan.';
+  throw Exception(message);
+}
 }
 
   // ✅ Tambah method ini di TransactionService

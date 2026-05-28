@@ -213,6 +213,12 @@ void initTabController(int length) {
     await fetchMenuByCategory(id);
   }
 
+  List<MenuModels> getMenusByCategory(int categoryId) {
+    return _menuCache[categoryId] ?? [];
+  }
+
+
+
   // ==================== TAMBAHAN FUNGSI HAPUS MENU ====================
   Future<void> deleteMenu(int id) async {
     try {

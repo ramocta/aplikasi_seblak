@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
+import 'dart:io';
 import 'package:seblak_say_cafe/core/api/api_client.dart';
 import 'package:seblak_say_cafe/core/constans/api_constans.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/kategori_topping_models.dart';
 import '../models/topping_models.dart';
 
@@ -8,9 +10,9 @@ class ToppingService {
   /// Mengambil semua kategori topping
   Future<List<KategoriToppingModels>> getAllCategories() async {
     try {
-      final response = await ApiClient.dio.get(
-        ApiConstants.kategoriTopping,
-      ). timeout(const Duration(seconds: 15));// Gunakan constant jika ada
+      final response = await ApiClient.dio
+          .get(ApiConstants.kategoriTopping)
+          .timeout(const Duration(seconds: 15));
 
       print('✅ Get Topping Categories Status: ${response.statusCode}');
 
@@ -39,9 +41,7 @@ class ToppingService {
           .get(ApiConstants.topping, queryParameters: {'kategori': categoryId})
           .timeout(const Duration(seconds: 15));
 
-      print(
-        '✅ Get Topping Category $categoryId Status: ${response.statusCode}',
-      );
+      print('✅ Get Topping Category $categoryId Status: ${response.statusCode}');
       print('Data length: ${(response.data['data'] as List?)?.length ?? 0}');
 
       if (response.statusCode == 200) {
@@ -59,35 +59,32 @@ class ToppingService {
       throw Exception('Terjadi kesalahan saat mengambil topping');
     }
   }
-}
+
   // ==================== ADMIN ONLY ====================
 
-  /// Tambah Topping Baru (Admin) - MENGGUNAKAN FORMDATA (MULTIPART)
+  /// Tambah Topping Baru (Admin)
   Future<bool> addTopping(Map<String, dynamic> data) async {
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       final String token = prefs.getString('token') ?? '';
 
-      // 1. Bungkus data teks ke dalam FormData sesuai parameter Validator Laravel
       FormData formData = FormData.fromMap({
         'id_kategori_topping': data['id_kategori_topping'],
-        'nama_topping': data['nama_topping'], // SINKRON: Sesuai nama_topping di Laravel
+        'nama_topping': data['nama_topping'],
         'harga': data['harga'],
         'stok': data['stok'],
       });
 
-      // 2. Jika user memilih file gambar, konversi menjadi MultipartFile
       if (data['gambar_file'] != null) {
         File file = data['gambar_file'];
         formData.files.add(MapEntry(
-          'gambar', // Key harus sesuai dengan 'gambar' di Validator Laravel
+          'gambar',
           await MultipartFile.fromFile(
             file.path,
             filename: file.path.split('/').last,
           ),
         ));
       } else if (data['gambar_bytes'] != null) {
-        // Antisipasi cadangan jika aplikasi di-run via Flutter Web Browser
         formData.files.add(MapEntry(
           'gambar',
           MultipartFile.fromBytes(
@@ -97,44 +94,41 @@ class ToppingService {
         ));
       }
 
-      // 3. Eksekusi POST request ke Laravel API
       final response = await ApiClient.dio.post(
-        ApiConstants.adminTopping, 
+        ApiConstants.adminTopping,
         data: formData,
         options: Options(
           headers: {
             if (token.isNotEmpty) 'Authorization': 'Bearer $token',
-            'Accept': 'application/json', // Menolak mentah-mentah return HTML jika ada error internal
+            'Accept': 'application/json',
           },
         ),
       );
-      
+
       return response.statusCode == 201 || response.statusCode == 200;
     } on DioException catch (e) {
-       if (e.response != null) {
-         print("❌ DETAIL VALIDASI GAGAL LARAVEL (POST): ${e.response?.data}");
-       }
-       throw Exception('Gagal menambah topping: ${e.response?.data['message'] ?? e.message}');
+      if (e.response != null) {
+        print("❌ DETAIL VALIDASI GAGAL LARAVEL (POST): ${e.response?.data}");
+      }
+      throw Exception(
+          'Gagal menambah topping: ${e.response?.data['message'] ?? e.message}');
     }
   }
 
-  /// Update Topping Lama (Admin) - MENGGUNAKAN FORMDATA + SPOOFING METHOD_PUT
+  /// Update Topping Lama (Admin)
   Future<bool> updateTopping(int id, Map<String, dynamic> data) async {
     try {
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       final String token = prefs.getString('token') ?? '';
 
-      // TRICK PENTING LARAVEL: Upload file di Laravel via PUT method sering kali bermasalah/kosong.
-      // Solusi terbaiknya adalah mengirim POST request, tapi disisipkan field '_method': 'PUT' (Method Spoofing).
       FormData formData = FormData.fromMap({
-        '_method': 'PUT', 
+        '_method': 'PUT',
         'id_kategori_topping': data['id_kategori_topping'],
         'nama_topping': data['nama_topping'],
         'harga': data['harga'],
         'stok': data['stok'],
       });
 
-      // Validasi file gambar jika ada perubahan foto baru
       if (data['gambar_file'] != null) {
         File file = data['gambar_file'];
         formData.files.add(MapEntry(
@@ -149,14 +143,14 @@ class ToppingService {
           'gambar',
           MultipartFile.fromBytes(
             data['gambar_bytes'],
-            filename: 'topping_update_${DateTime.now().millisecondsSinceEpoch}.jpg',
+            filename:
+                'topping_update_${DateTime.now().millisecondsSinceEpoch}.jpg',
           ),
         ));
       }
 
-      // Endpoint diarahkan menggunakan POST karena sudah dicarry oleh '_method': 'PUT' di atas
       final response = await ApiClient.dio.post(
-        '${ApiConstants.adminTopping}/$id', 
+        '${ApiConstants.adminTopping}/$id',
         data: formData,
         options: Options(
           headers: {
@@ -165,13 +159,14 @@ class ToppingService {
           },
         ),
       );
-      
+
       return response.statusCode == 200;
     } on DioException catch (e) {
-       if (e.response != null) {
-         print("❌ DETAIL VALIDASI GAGAL LARAVEL (PUT): ${e.response?.data}");
-       }
-       throw Exception('Gagal update topping: ${e.response?.data['message'] ?? e.message}');
+      if (e.response != null) {
+        print("❌ DETAIL VALIDASI GAGAL LARAVEL (PUT): ${e.response?.data}");
+      }
+      throw Exception(
+          'Gagal update topping: ${e.response?.data['message'] ?? e.message}');
     }
   }
 
@@ -192,11 +187,12 @@ class ToppingService {
           },
         ),
       );
-      
+
       return response.statusCode == 200 || response.statusCode == 204;
     } on DioException catch (e) {
-       print("❌ Error deleteTopping: ${e.response?.data ?? e.message}");
-       throw Exception('Gagal menghapus topping: ${e.response?.data['message'] ?? e.message}');
+      print("❌ Error deleteTopping: ${e.response?.data ?? e.message}");
+      throw Exception(
+          'Gagal menghapus topping: ${e.response?.data['message'] ?? e.message}');
     }
   }
-}
+} // ✅ Kurung tutup class dipindah ke paling bawah

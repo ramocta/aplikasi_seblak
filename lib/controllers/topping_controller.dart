@@ -361,4 +361,19 @@ void initTabController(int length) {
     _selectedQuantities.clear();
     await initialLoad();
   }
+
+  Future<void> deleteTopping(int id) async {
+  try {
+    final bool success = await _toppingService.deleteTopping(id);
+    
+    if (success) {
+      // ✅ Hapus dari list lokal langsung tanpa fetch ulang ke server
+      listTopping.removeWhere((t) => t.id == id);
+    } else {
+      throw Exception('Gagal menghapus topping.');
+    }
+  } catch (e) {
+    rethrow; // ✅ Lempar kembali ke page untuk ditangkap try-catch di UI
+  }
+}
 }

@@ -205,7 +205,7 @@ class AppRouter {
 
           GoRoute(
             path: '/menu_management',
-            builder: (context, state) => const MenuPage(),
+            builder: (context, state) => const MenuPageAdmin(),
           ),
 
           GoRoute(

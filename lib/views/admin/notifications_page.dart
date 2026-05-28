@@ -54,7 +54,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
           'title': 'MENU STOCK WARNING',
           'name': menu.nama,
           'stok': stockMenu,
-          'created_at': menu.lastUpdate ?? DateTime.now().toString(),
+          'created_at': menu.lastUpdate,
         });
       }
     }

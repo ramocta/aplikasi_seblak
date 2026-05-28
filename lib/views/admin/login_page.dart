@@ -41,7 +41,7 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       final response = await http.post(
-        Uri.parse("http://localhost:8000/api/admin/login"), // Dikembalikan ke localhost bawaan lu bang
+        Uri.parse("http://192.168.18.171:8000/api/admin/login"), // Dikembalikan ke localhost bawaan lu bang
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',

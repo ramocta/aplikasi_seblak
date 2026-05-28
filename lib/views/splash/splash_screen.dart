@@ -17,7 +17,7 @@ class _SplashScreenState extends State<SplashScreen> {
     // Logika untuk pindah ke halaman Welcome setelah 3 detik
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
-        context.go('/welcome');
+        context.go('/login');
       }
     });
   }
@@ -33,8 +33,8 @@ class _SplashScreenState extends State<SplashScreen> {
             // Foto di tengah
             Image.asset(
               AppAssets.logo1,
-              width: 300, // Sesuaikan ukuran
-              height: 300,
+              width: 400, // Sesuaikan ukuran
+              height: 400,
             ),
             const SizedBox(height: 20),
             // Opsional: Tambahkan Loading Indicator
