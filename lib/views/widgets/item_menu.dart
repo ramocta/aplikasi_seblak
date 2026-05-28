@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../utils/currency_format.dart';
 
 class ItemMenu extends StatelessWidget {
   final int id;
@@ -81,7 +82,7 @@ class ItemMenu extends StatelessWidget {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'Rp $harga',
+                          CurrencyFormat.convertToIdr(harga),
                           style: const TextStyle(
                             color: Color(0xFF121212),
                             fontSize: 14,

@@ -5,6 +5,7 @@ import '../widgets/menu_rectangle.dart';
 import '../widgets/custom_button.dart';
 import '../../controllers/cart_controller.dart';
 import '../../models/cart_models.dart';
+import '../../utils/currency_format.dart';
 
 class DetailMenuPage extends StatefulWidget {
   final int id;
@@ -124,7 +125,7 @@ class _DetailMenuPageState extends State<DetailMenuPage> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      "Price: Rp $hargaSatuan",
+                      CurrencyFormat.convertToIdr(hargaSatuan),
                       style: const TextStyle(
                         fontSize: 16,
                         color: Colors.black87,
@@ -175,7 +176,7 @@ class _DetailMenuPageState extends State<DetailMenuPage> {
                           ),
                         ),
                         Text(
-                          "Rp $totalHarga",
+                         CurrencyFormat.convertToIdr(totalHarga),
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,

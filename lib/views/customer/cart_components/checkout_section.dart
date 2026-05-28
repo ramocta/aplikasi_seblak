@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import '../../../controllers/cart_controller.dart';
 import '../../widgets/custom_button.dart';
+import '../../../utils/currency_format.dart';
 
 class CheckoutSection extends StatelessWidget {
   final CartController cartController;
@@ -39,7 +40,7 @@ class CheckoutSection extends StatelessWidget {
               ),
               Obx(
                 () => Text(
-                  "Rp. ${cartController.totalPrice}",
+                  CurrencyFormat.convertToIdr(cartController.totalPrice),
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,

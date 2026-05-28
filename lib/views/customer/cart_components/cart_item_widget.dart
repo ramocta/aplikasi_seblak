@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../models/cart_models.dart';
+import '../../../utils/currency_format.dart';
 
 class CartItemWidget extends StatelessWidget {
   final int itemNumber;
@@ -156,7 +157,7 @@ class CartItemWidget extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  "Rp. ${item.harga}",
+                  CurrencyFormat.convertToIdr(item.harga),
                   style: const TextStyle(color: Colors.grey, fontSize: 14),
                 ),
                 if (kategoriId == 1 && item.selectedToppings.isNotEmpty) ...[
@@ -165,7 +166,7 @@ class CartItemWidget extends StatelessWidget {
                     (topping) => Padding(
                       padding: const EdgeInsets.only(bottom: 3),
                       child: Text(
-                        "Rp. ${topping.harga * topping.quantity}",
+                        CurrencyFormat.convertToIdr(topping.harga * topping.quantity),
                         style: const TextStyle(
                           fontSize: 12,
                           color: Colors.black54,
@@ -187,7 +188,7 @@ class CartItemWidget extends StatelessWidget {
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             ),
             Text(
-              "Rp. $subtotalAkhir",
+              CurrencyFormat.convertToIdr(subtotalAkhir),
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 14,

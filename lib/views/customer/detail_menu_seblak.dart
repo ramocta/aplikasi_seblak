@@ -6,6 +6,7 @@ import 'package:seblak_say_cafe/controllers/topping_controller.dart';
 import 'package:seblak_say_cafe/models/cart_models.dart';
 import '../widgets/menu_rectangle.dart';
 import '../widgets/custom_button.dart';
+import "../../utils/currency_format.dart";
 
 class DetailMenuSeblakPage extends StatefulWidget {
   final int id;
@@ -49,7 +50,7 @@ class _DetailMenuSeblakPageState extends State<DetailMenuSeblakPage> {
         if (editMode) {
           // ✅ Skip sync dari server saat edit mode
           toppingController.skipServerSync = true;
-          
+
           final List? savedToppings = extra['selectedToppings'] as List?;
           if (savedToppings != null && savedToppings.isNotEmpty) {
             ever(toppingController.listTopping, (_) {
@@ -61,10 +62,16 @@ class _DetailMenuSeblakPageState extends State<DetailMenuSeblakPage> {
                 }
               }
             });
-            
+
             // ✅ Restore quantities dari saved toppings untuk quick update
             toppingController.restoreQuantitiesFromSaved(
-              savedToppings.map((t) => t is ToppingItem ? {'id': t.id, 'quantity': t.quantity} : t).toList()
+              savedToppings
+                  .map(
+                    (t) => t is ToppingItem
+                        ? {'id': t.id, 'quantity': t.quantity}
+                        : t,
+                  )
+                  .toList(),
             );
           }
         }
@@ -173,7 +180,7 @@ class _DetailMenuSeblakPageState extends State<DetailMenuSeblakPage> {
                         ),
                         const SizedBox(height: 10),
                         Text(
-                          "Base price: Rp ${_parseHarga(data['harga'])}",
+                          "Base price: ${CurrencyFormat.convertToIdr(_parseHarga(data['harga']))}",
                           style: const TextStyle(
                             fontSize: 16,
                             color: Colors.black87,
@@ -332,7 +339,7 @@ class _DetailMenuSeblakPageState extends State<DetailMenuSeblakPage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  "Rp ${topping.harga}",
+                  CurrencyFormat.convertToIdr(topping.harga),
                   style: const TextStyle(color: Colors.grey, fontSize: 12),
                 ),
               ],
@@ -382,7 +389,7 @@ class _DetailMenuSeblakPageState extends State<DetailMenuSeblakPage> {
             ),
             Obx(
               () => Text(
-                "Rp $currentTotal",
+                CurrencyFormat.convertToIdr(currentTotal),
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -402,12 +409,28 @@ class _DetailMenuSeblakPageState extends State<DetailMenuSeblakPage> {
   }
 
   void _handleAddToCart() {
-    final selectedToppings = toppingController.getSelectedToppingsList();
+    // 1. Ambil daftar mentah topping terpilih
+    final rawSelectedToppings = toppingController.getSelectedToppingsList();
 
-    if (selectedToppings.isEmpty) {
+    // 💡 PERBAIKAN UTAMA: Filter dan buat daftar objek ToppingItem HANYA jika kuantitasnya > 0
+    final List<ToppingItem> validToppings = [];
+
+    for (final t in rawSelectedToppings) {
+      final int qty = toppingController.getQuantity(t.id);
+      if (qty > 0) {
+        validToppings.add(
+          ToppingItem(id: t.id, nama: t.nama, harga: t.harga, quantity: qty),
+        );
+      }
+    }
+
+    // 2. Validasi: Jika setelah difilter ternyata kosong, tampilkan snackbar peringatan
+    if (validToppings.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text("Must choose at least 1 topping."),
+          content: const Text(
+            "Must choose at least 1 topping.",
+          ),
           backgroundColor: const Color(0xFFDE3905),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -425,6 +448,7 @@ class _DetailMenuSeblakPageState extends State<DetailMenuSeblakPage> {
 
     final dynamic menuId = data['id'] ?? widget.id;
 
+    // 3. Masukkan 'validToppings' yang sudah bersih dari item bernilai 0 ke dalam CartItem
     final newItem = CartItem(
       id: menuId,
       idKategoriMenu: kategoriId,
@@ -432,18 +456,11 @@ class _DetailMenuSeblakPageState extends State<DetailMenuSeblakPage> {
       harga: _parseHarga(data['harga']),
       gambarUrl: data['gambarUrl'] ?? '',
       quantity: menuQuantity,
-      selectedToppings: selectedToppings
-          .map(
-            (t) => ToppingItem(
-              id: t.id,
-              nama: t.nama,
-              harga: t.harga,
-              quantity: toppingController.getQuantity(t.id),
-            ),
-          )
-          .toList(),
+      selectedToppings:
+          validToppings, // 💡 Gunakan list yang sudah difilter di sini
     );
 
+    // 4. Eksekusi penyimpanan ke CartController
     if (isEditMode && cartIndex != -1) {
       cartController.updateCartItemAt(cartIndex, newItem);
     } else {

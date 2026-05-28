@@ -9,6 +9,7 @@ import '../../core/constans/app_assets.dart';
 import '../widgets/order_status_popup.dart';
 import '../widgets/payment_instruction_sheet.dart';
 import '../widgets/custom_button.dart'; // ✅ Pastikan CustomButton terimport dengan benar
+import '../../utils/currency_format.dart'; // ✅ Pastikan CurrencyFormat terimport dengan benar
 
 class DetailTransactionPage extends StatefulWidget {
   final TransactionModel transaction;
@@ -321,7 +322,7 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
                             ),
                           ),
                           Text(
-                            "Rp. ${detail.hargaTotal.toStringAsFixed(0)}",
+                           CurrencyFormat.convertToIdr(detail.hargaTotal),
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -415,7 +416,7 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
                 ),
               ),
               Text(
-                "Rp. ${item.hargaSatuan.toStringAsFixed(0)}",
+                CurrencyFormat.convertToIdr(item.hargaSatuan),
                 style: const TextStyle(
                     fontSize: 13, color: Colors.black54),
               ),
@@ -444,7 +445,7 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
                           fontSize: 11, color: Colors.black45),
                     ),
                     Text(
-                      "Rp. ${t.hargaSatuan.toStringAsFixed(0)}",
+                      CurrencyFormat.convertToIdr(t.hargaSatuan),
                       style: const TextStyle(
                           fontSize: 11, color: Colors.black45),
                     ),
@@ -458,7 +459,7 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
           Align(
             alignment: Alignment.centerRight,
             child: Text(
-              "Rp. ${item.subtotal.toStringAsFixed(0)}",
+              CurrencyFormat.convertToIdr(item.subtotal),
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.bold,

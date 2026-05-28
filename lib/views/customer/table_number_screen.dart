@@ -16,6 +16,7 @@ class TableNumberScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: false,
       body: Column(
         children: [
           // HEADER PUTIH DENGAN ELLIPS
@@ -56,28 +57,29 @@ class TableNumberScreen extends StatelessWidget {
                   const SizedBox(height: 30),
 
                   // INPUT NOMOR MEJA
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(15),
-                      border: Border.all(color: Colors.grey[300]!),
-                    ),
-                    child: TextField(
-                      textAlign: TextAlign.center,
-                      keyboardType: TextInputType.number,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                   TextField(
+                    onChanged: (value) => controller.setTableNumber(value),
+                    textAlign: TextAlign.center,
+                    keyboardType: TextInputType.number,
+                    style: const TextStyle(fontSize: 14),
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.grey[200],
+                      hintText: "Your Table Number",
+                      hintStyle: const TextStyle(
+                        color: Colors.grey,
+                        fontSize: 13,
                       ),
-                      // ✅ DIGANTI DENGAN setTableNumber
-                      onChanged: (value) => controller.setTableNumber(value),
-                      decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(vertical: 15),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 16,
                       ),
                     ),
-                  ),
+                   ),
 
                   const SizedBox(height: 25),
                   const Text(
@@ -99,15 +101,7 @@ class TableNumberScreen extends StatelessWidget {
                           text: "Save",
                           onPressed: isReady
                               ? () => context.push('/menu')
-                              : () {
-                                  Get.snackbar(
-                                    "Input Meja",
-                                    "Silahkan isi nomor meja yang valid (1-20)",
-                                    snackPosition: SnackPosition.BOTTOM,
-                                    backgroundColor: Colors.redAccent,
-                                    colorText: Colors.white,
-                                  );
-                                },
+                              : null,
                         ),
                       ),
                     );

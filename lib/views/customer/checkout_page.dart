@@ -82,7 +82,7 @@ class CheckoutPage extends StatelessWidget {
                       decoration: InputDecoration(
                         filled: true,
                         fillColor: Colors.grey[100], // Sedikit lebih terang
-                        hintText: "Masukkan nama Anda",
+                        hintText: "Your Name",
                         hintStyle: const TextStyle(
                           color: Colors.grey,
                           fontSize: 13,
@@ -157,7 +157,7 @@ class CheckoutPage extends StatelessWidget {
                       ? "Processing..."
                       : method == 'qris'
                       ? "Continue to Payment"
-                      : "Checkout",
+                      : "Pay",
                   onPressed: (!isValid || isLoading)
                       ? null
                       : () async {
