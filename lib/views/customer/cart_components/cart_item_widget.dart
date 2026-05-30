@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../models/cart_models.dart';
 import '../../../utils/currency_format.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class CartItemWidget extends StatelessWidget {
   final int itemNumber;
@@ -86,12 +87,12 @@ class CartItemWidget extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: item.gambarUrl.isNotEmpty
-                  ? Image.network(
-                      item.gambarUrl,
+                  ? CachedNetworkImage(
+                      imageUrl: item.gambarUrl,
                       width: 80,
                       height: 80,
                       fit: BoxFit.cover,
-                      errorBuilder: (c, e, s) => Container(
+                      errorWidget: (c, e, s) => Container(
                         width: 80,
                         height: 80,
                         color: Colors.grey[300],

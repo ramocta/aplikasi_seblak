@@ -5,6 +5,7 @@ import 'package:seblak_say_cafe/controllers/menu_controller.dart' as my_ctrl;
 import 'package:seblak_say_cafe/controllers/cart_controller.dart';
 import 'package:seblak_say_cafe/core/constans/app_color.dart';
 import 'package:seblak_say_cafe/core/constans/app_assets.dart';
+import 'package:seblak_say_cafe/controllers/page_controller.dart';
 import '../widgets/item_menu.dart';
 import '../widgets/menu_rectangle.dart';
 import '../widgets/table_number.dart';
@@ -36,15 +37,6 @@ class MenuPage extends StatelessWidget {
           padding: const EdgeInsets.only(top: 12.0),
           child: Image.asset(AppAssets.logo2, height: 90, fit: BoxFit.contain),
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(top: 8.0, right: 8.0),
-            child: IconButton(
-              icon: const Icon(Icons.menu, color: AppColors.primary, size: 28),
-              onPressed: () {},
-            ),
-          ),
-        ],
       ),
       body: Stack(
         children: [
@@ -53,18 +45,8 @@ class MenuPage extends StatelessWidget {
             children: [
               const SizedBox(height: 15),
 
-              // BANNER PROMO
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16),
-                height: 150,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(13),
-                  image: DecorationImage(
-                    image: AssetImage(AppAssets.bannerPromo),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
+              // BANNER PROMO import dari page controller
+              const HomeBannerSlider(),
 
               const SizedBox(height: 16),
 
@@ -128,6 +110,7 @@ class MenuPage extends StatelessWidget {
                                     harga: menu.harga,
                                     gambarUrl: menu.gambarUrl,
                                     idKategoriMenu: menu.kategorimenu.id,
+                                    stok: menu.stok, // 💡 Kirim data stok ke widget
                                   );
                                 },
                               );
@@ -156,6 +139,7 @@ class MenuPage extends StatelessWidget {
                     width: double.infinity,
                     child: CustomButton(
                       text: 'View cart',
+                      icon: Icons.shopping_cart_outlined,
                       onPressed: () => context.push('/cart'),
                     ),
                   ),

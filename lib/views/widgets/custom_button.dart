@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 
 class CustomButton extends StatefulWidget {
   final String text;
-  // ✅ Ubah menjadi nullable agar bisa pass null untuk state disabled
   final VoidCallback? onPressed;
+  final IconData? icon; // 💡 Tambahkan parameter icon opsional di sini
 
   const CustomButton({
     super.key,
     required this.text,
     required this.onPressed,
+    this.icon, // 💡 Masukkan ke constructor
   });
 
   @override
@@ -18,7 +19,6 @@ class CustomButton extends StatefulWidget {
 class _CustomButtonState extends State<CustomButton> {
   bool _isPressed = false;
 
-  // ✅ Button dianggap disabled jika onPressed null
   bool get _isDisabled => widget.onPressed == null;
 
   @override
@@ -27,14 +27,13 @@ class _CustomButtonState extends State<CustomButton> {
       onTapDown: _isDisabled ? null : (_) => setState(() => _isPressed = true),
       onTapUp: _isDisabled ? null : (_) => setState(() => _isPressed = false),
       onTapCancel: _isDisabled ? null : () => setState(() => _isPressed = false),
-      // ✅ onTap null saat disabled — tidak bisa diklik
       onTap: _isDisabled ? null : widget.onPressed,
       child: MouseRegion(
         cursor: _isDisabled
             ? SystemMouseCursors.forbidden
             : SystemMouseCursors.click,
         child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           width: double.infinity,
           height: 52,
           child: Stack(
@@ -45,7 +44,6 @@ class _CustomButtonState extends State<CustomButton> {
                 width: double.infinity,
                 height: 48,
                 decoration: ShapeDecoration(
-                  // ✅ Warna abu-abu saat disabled, merah saat aktif
                   color: _isDisabled
                       ? Colors.grey[350]
                       : _isPressed
@@ -55,21 +53,33 @@ class _CustomButtonState extends State<CustomButton> {
                     borderRadius: BorderRadius.circular(13),
                   ),
                 ),
-                child: Center(
-                  child: AnimatedDefaultTextStyle(
-                    duration: const Duration(milliseconds: 150),
-                    style: TextStyle(
-                      // ✅ Warna teks lebih pudar saat disabled
-                      color: _isDisabled
-                          ? Colors.grey[500]
-                          : const Color(0xFFEFEAEA),
-                      fontSize: 16,
-                      fontFamily: 'Rubik',
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: _isPressed ? 0.8 : 0.0,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center, // 💡 Menjaga isi button tetap di tengah
+                  children: [
+                    // 💡 Tampilkan ikon jika parameter icon tidak bernilai null
+                    if (widget.icon != null) ...[
+                      Icon(
+                        widget.icon,
+                        size: 20,
+                        // Warna ikon mengikuti status tombol (disabled / aktif)
+                        color: _isDisabled ? Colors.grey[500] : const Color(0xFFEFEAEA),
+                      ),
+                      const SizedBox(width: 8), // 💡 Jarak konstan antara ikon dan teks
+                    ],
+                    AnimatedDefaultTextStyle(
+                      duration: const Duration(milliseconds: 150),
+                      style: TextStyle(
+                        color: _isDisabled
+                            ? Colors.grey[500]
+                            : const Color(0xFFEFEAEA),
+                        fontSize: 16,
+                        fontFamily: 'Rubik',
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: _isPressed ? 0.8 : 0.0,
+                      ),
+                      child: Text(widget.text),
                     ),
-                    child: Text(widget.text),
-                  ),
+                  ],
                 ),
               ),
             ],

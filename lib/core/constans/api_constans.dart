@@ -19,6 +19,8 @@ class ApiConstants {
 
   static const String transactionDetailCustomer = '/transactions';
 
+  static const String cancelTransaction = '/transactions'; // Endpoint untuk membatalkan transaksi
+
   // ==================== MANAGEMENT ENDPOINTS (ADMIN) ====================
   static const String adminMenu = '/admin/menu';
   static const String adminTopping = '/admin/topping';

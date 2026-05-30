@@ -8,8 +8,8 @@ import '../../services/transactions_services.dart';
 import '../../core/constans/app_assets.dart';
 import '../widgets/order_status_popup.dart';
 import '../widgets/payment_instruction_sheet.dart';
-import '../widgets/custom_button.dart'; // ✅ Pastikan CustomButton terimport dengan benar
-import '../../utils/currency_format.dart'; // ✅ Pastikan CurrencyFormat terimport dengan benar
+import '../widgets/custom_button.dart';
+import '../../utils/currency_format.dart';
 
 class DetailTransactionPage extends StatefulWidget {
   final TransactionModel transaction;
@@ -17,11 +17,11 @@ class DetailTransactionPage extends StatefulWidget {
   const DetailTransactionPage({super.key, required this.transaction});
 
   @override
-  State<DetailTransactionPage> createState() =>
-      _DetailTransactionPageState();
+  State<DetailTransactionPage> createState() => _DetailTransactionPageState();
 }
 
-class _DetailTransactionPageState extends State<DetailTransactionPage> {
+class _DetailTransactionPageState extends State<DetailTransactionPage>
+    with SingleTickerProviderStateMixin {
   final TransactionService _transactionService = TransactionService();
 
   TransactionDetailModel? _detail;
@@ -30,20 +30,25 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
   String _lastStatus = 'pending';
   bool _popupShown = false;
 
-  // ✅ Timer untuk polling setiap 5 detik
   Timer? _pollingTimer;
+  late AnimationController _blinkController;
 
   @override
   void initState() {
     super.initState();
+    _blinkController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    )..repeat(reverse: true);
+
     _fetchDetail();
     _startPolling();
   }
 
   @override
   void dispose() {
-    // ✅ Wajib cancel timer saat page ditutup
     _pollingTimer?.cancel();
+    _blinkController.dispose();
     super.dispose();
   }
 
@@ -56,14 +61,12 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
 
       final String newStatus = detail.statusPesanan;
 
-      // ✅ Cek apakah status berubah dari sebelumnya
       if (newStatus != _lastStatus && !_popupShown) {
         if (newStatus == 'done' || newStatus == 'reject') {
           _popupShown = true;
-          // ✅ Stop polling saat status sudah final
           _pollingTimer?.cancel();
+          _blinkController.stop();
 
-          // Tampilkan popup setelah setState selesai
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
               OrderStatusPopup.show(
@@ -91,15 +94,101 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
   }
 
   void _startPolling() {
-    // ✅ Polling setiap 5 detik selama status masih pending
     _pollingTimer = Timer.periodic(const Duration(seconds: 5), (_) {
       if (_lastStatus == 'pending') {
         _fetchDetail();
       } else {
-        // Status sudah final, stop polling
         _pollingTimer?.cancel();
       }
     });
+  }
+
+  // 💡 Fungsi untuk menampilkan popup konfirmasi keluar / batalkan order
+  Future<bool> _showDiscardDialog() async {
+    // Jika status transaksi sudah sukses/reject, izinkan langsung keluar tanpa konfirmasi
+    if (_lastStatus != 'pending') return true;
+
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false, // Mengharuskan user memilih salah satu tombol
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            "Discard this order?",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+              color: Colors.black87,
+            ),
+          ),
+          content: const Text(
+            "Please wait until the cashier verifies your order.",
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.black54,
+              height: 1.4,
+            ),
+          ),
+          actionsAlignment: MainAxisAlignment.spaceBetween,
+          actions: [
+            // Tombol Discard (Membatalkan & Menghapus transaksi)
+            TextButton(
+              onPressed: () async {
+                // Tutup Dialog terlebih dahulu dengan membawa nilai true
+                Navigator.of(context).pop(true);
+              },
+              child: const Text(
+                "Discard",
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            // Tombol Keep Waiting (Batal keluar, tetap di page)
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+              child: const Text(
+                "Keep Waiting",
+                style: TextStyle(
+                  color: Color(0xFFDE3905),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    // Jika user memilih Discard (result == true), jalankan proses hapus backend
+    if (result == true) {
+      try {
+        // Tampilkan loading indikator sejenak saat menghapus
+        setState(() => _isLoading = true);
+        
+        // 💡 Eksekusi hapus order dari service backend Anda
+        await _transactionService.cancelOrDeleteTransaction(widget.transaction.idTransaksi!);
+        
+        return true; // Izinkan navigasi keluar (ke /menu)
+      } catch (e) {
+        if (mounted) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Gagal menghapus order: $e")),
+          );
+        }
+        return false; // Gagal hapus, tahan user di page
+      }
+    }
+
+    return false; // User memilih Keep Waiting
   }
 
   Color _statusColor(String status) {
@@ -131,33 +220,50 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
         'Order#${tx.idTransaksi?.toString().padLeft(3, '0') ?? '000'}';
     final bool isTunai = tx.paymentMethod == 'tunai';
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F6FB),
-      // ✅ Merapikan Header & AppBar sesuai mockup gambar
-      appBar: AppBar(
-        backgroundColor: Colors.transparent, // Transparan agar menyatu dengan background body
-        elevation: 0,
-        scrolledUnderElevation: 0, 
-        toolbarHeight: 70, // Memberikan ruang vertikal yang pas bagi logo
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFFDE3905)),
-          onPressed: () => context.go('/menu'),
+    // 💡 Bungkus Scaffold dengan PopScope untuk menangani tombol Back fisik/gesture HP
+    return PopScope(
+      canPop: false, // Kunci back otomatis agar dikendalikan oleh onPopInvokedWithResult
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        
+        final shouldPop = await _showDiscardDialog();
+        if (shouldPop && context.mounted) {
+          context.go('/welcome');
+        }
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF5F6FB),
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          toolbarHeight: 70,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Color(0xFFDE3905)),
+            onPressed: () async {
+              // 💡 Panggil fungsi dialog yang sama saat icon panah kembali ditekan
+              final shouldPop = await _showDiscardDialog();
+              if (shouldPop && context.mounted) {
+                context.go('/welcome');
+              }
+            },
+          ),
+          title: Padding(
+            padding: const EdgeInsets.only(top: 12.0),
+            child: Image.asset(AppAssets.logo2, height: 100, fit: BoxFit.contain),
+          ),
+          centerTitle: true,
         ),
-        title: Padding(
-          padding: const EdgeInsets.only(top: 12.0),
-          child: Image.asset(AppAssets.logo2, height: 100, fit: BoxFit.contain), // Ukuran logo yang proporsional
-        ),
-        centerTitle: true,
+        body: _isLoading
+            ? const Center(
+                child: CircularProgressIndicator(
+                  color: Color(0xFFDE3905),
+                ),
+              )
+            : _errorMessage.isNotEmpty
+                ? _buildError()
+                : _buildContent(orderId, isTunai),
       ),
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(
-                color: Color(0xFFDE3905),
-              ),
-            )
-          : _errorMessage.isNotEmpty
-              ? _buildError()
-              : _buildContent(orderId, isTunai),
     );
   }
 
@@ -201,20 +307,25 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
     final String modeDisplay =
         detail.opsiPemesanan == 'dine in' ? 'Dine In' : 'Take Away';
 
-    // ✅ Deteksi status akhir untuk mengubah tombol instruksi jadi "Back to Homepage"
     final bool isStatusFinal = _lastStatus == 'done' || _lastStatus == 'reject';
+
+    String statusInfoText = "Your order is being processed. Please wait";
+    if (_lastStatus == 'done') {
+      statusInfoText = "Your order is successful. Thank you for ordering";
+    } else if (_lastStatus == 'reject') {
+      statusInfoText = "Your order was rejected. Please contact the cashier";
+    }
 
     return LayoutBuilder(
       builder: (context, constraints) {
         return SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 12, 24, 30),
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 30),
           child: ConstrainedBox(
-            // ✅ Mengatur tinggi minimal agar Column dapat memakai sumbu vertikal penuh
             constraints: BoxConstraints(
-              minHeight: constraints.maxHeight - 42,
+              minHeight: constraints.maxHeight - 46,
             ),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center, // ✅ Menggeser komponen utama ke tengah vertikal
+              mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Status Pesanan
@@ -248,28 +359,40 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
                   ),
                 ),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
 
-                // Info sedang diproses
-                if (detail.statusPesanan == 'pending')
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(14),
-                    margin: const EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Text(
-                      "Your order is being processed. Please wait",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ),
+                // Teks Informasi Dinamis & Animasi Berkedip
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: _lastStatus == 'pending'
+                        ? FadeTransition(
+                            opacity: _blinkController,
+                            child: Text(
+                              statusInfoText,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black54,
+                              ),
+                            ),
+                          )
+                        : Text(
+                            statusInfoText,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: _lastStatus == 'done'
+                                  ? Colors.green[700]
+                                  : Colors.red[700],
+                            ),
+                          ),
                   ),
+                ),
+
+                const SizedBox(height: 16),
 
                 // Card detail transaksi
                 Container(
@@ -305,7 +428,6 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
 
                       const Divider(height: 24, color: Color(0xFFEEEEEE)),
 
-                      // List item pesanan dari database
                       ...detail.items.map((item) => _buildItemRow(item)),
 
                       const Divider(height: 24, color: Color(0xFFEEEEEE)),
@@ -322,7 +444,7 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
                             ),
                           ),
                           Text(
-                           CurrencyFormat.convertToIdr(detail.hargaTotal),
+                            CurrencyFormat.convertToIdr(detail.hargaTotal),
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -337,7 +459,7 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
 
                 const SizedBox(height: 28),
 
-                // ✅ KONDISIONAL TOMBOL: Jika status BELUM Selesai/Batal, tampilkan cara bayar (bila tunai)
+                // KONDISIONAL TOMBOL Cara Bayar
                 if (!isStatusFinal && isTunai) ...[
                   const Text(
                     "Payment Instructions",
@@ -381,12 +503,12 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
                   ),
                 ],
 
-                // ✅ KONDISIONAL TOMBOL: Jika status SUDAH Selesai ('done') atau Batal ('reject')
+                // KONDISIONAL TOMBOL Selesai / Batal
                 if (isStatusFinal) ...[
                   CustomButton(
                     text: "Back to Homepage",
                     onPressed: () {
-                      context.go('/welcome'); // Mengarahkan kembali ke halaman welcome kiosk
+                      context.go('/welcome');
                     },
                   ),
                 ],
@@ -398,79 +520,90 @@ class _DetailTransactionPageState extends State<DetailTransactionPage> {
     );
   }
 
-  Widget _buildItemRow(PesananItemModel item) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "${item.menu.namaMenu} x ${item.qty}",
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
-              ),
-              Text(
-                CurrencyFormat.convertToIdr(item.hargaSatuan),
-                style: const TextStyle(
-                    fontSize: 13, color: Colors.black54),
-              ),
-            ],
-          ),
+Widget _buildItemRow(PesananItemModel item) {
+  // 💡 Hitung total harga dari semua topping yang ada pada item ini
+  // Formula: hargaSatuanTopping * qtyTopping
+  int totalHargaTopping = item.toppings.fold<int>(
+  0, 
+  (sum, t) => sum + (t.hargaSatuan * t.qty).toInt(),
+);
 
-          if (item.toppings.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            const Text(
-              "Topping:",
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                color: Colors.black54,
-              ),
-            ),
-            ...item.toppings.map(
-              (t) => Padding(
-                padding: const EdgeInsets.only(left: 8, top: 2),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "${t.namaTopping} x ${t.qty}",
-                      style: const TextStyle(
-                          fontSize: 11, color: Colors.black45),
-                    ),
-                    Text(
-                      CurrencyFormat.convertToIdr(t.hargaSatuan),
-                      style: const TextStyle(
-                          fontSize: 11, color: Colors.black45),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
+// 💡 Lakukan hal yang sama pada subtotal final untuk memastikan keamanan tipe data
+int subtotalFinal = (item.hargaSatuan * item.qty).toInt() + totalHargaTopping;
 
-          const SizedBox(height: 4),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              CurrencyFormat.convertToIdr(item.subtotal),
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              "${item.menu.namaMenu} x ${item.qty}",
               style: const TextStyle(
                 fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFFDE3905),
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+            Text(
+              CurrencyFormat.convertToIdr(item.hargaSatuan),
+              style: const TextStyle(
+                  fontSize: 13, color: Colors.black54),
+            ),
+          ],
+        ),
+
+        if (item.toppings.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          const Text(
+            "Topping:",
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: Colors.black54,
+            ),
+          ),
+          ...item.toppings.map(
+            (t) => Padding(
+              padding: const EdgeInsets.only(left: 8, top: 2),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "${t.namaTopping} x ${t.qty}",
+                    style: const TextStyle(
+                        fontSize: 11, color: Colors.black45),
+                  ),
+                  Text(
+                    CurrencyFormat.convertToIdr(t.hargaSatuan),
+                    style: const TextStyle(
+                        fontSize: 11, color: Colors.black45),
+                  ),
+                ],
               ),
             ),
           ),
         ],
-      ),
-    );
-  }
+
+        const SizedBox(height: 4),
+        Align(
+          alignment: Alignment.centerRight,
+          child: Text(
+            // 💡 Menggunakan hasil perhitungan akumulasi subtotal final baru
+            CurrencyFormat.convertToIdr(subtotalFinal),
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFFDE3905),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
 
   Widget _buildInfoRow(String label, String value) {
     return Row(

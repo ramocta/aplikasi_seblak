@@ -189,6 +189,7 @@ class _DetailMenuPageState extends State<DetailMenuPage> {
 
                     CustomButton(
                       text: isEditMode ? "Update Cart" : "Add to Cart",
+                      icon: Icons.shopping_cart_outlined,
                       onPressed: () {
                         int kategoriId = data['idKategoriMenu'] is int
                             ? data['idKategoriMenu']

@@ -5,11 +5,27 @@ import 'package:seblak_say_cafe/core/constans/app_color.dart';
 import 'package:seblak_say_cafe/core/constans/app_assets.dart' show AppAssets;
 import '../../controllers/order_controller.dart';
 import 'package:seblak_say_cafe/views/widgets/header_clipper.dart';
-// Import file tempat CustomButton berada
 import 'package:seblak_say_cafe/views/widgets/custom_button.dart';
+import '../widgets/login_reminder_sheet.dart';
 
-class WelcomeScreen extends StatelessWidget {
+class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
+
+  @override
+  State<WelcomeScreen> createState() => _WelcomeScreenState();
+}
+
+class _WelcomeScreenState extends State<WelcomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    
+    // 💡 Memicu LoginReminderSheet otomatis muncul 1 detik setelah page ini terbuka
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Panggil fungsi statis dari sheet yang Anda buat sebelumnya
+      LoginReminderSheet.showWithDelay(context);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -93,7 +109,7 @@ class WelcomeScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 30),
                 ],
               ),
             ),

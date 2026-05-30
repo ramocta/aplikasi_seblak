@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:seblak_say_cafe/controllers/cart_controller.dart';
 import 'package:seblak_say_cafe/controllers/topping_controller.dart';
 import 'package:seblak_say_cafe/models/cart_models.dart';
@@ -115,11 +116,19 @@ class _DetailMenuSeblakPageState extends State<DetailMenuSeblakPage> {
               child:
                   data['gambarUrl'] != null &&
                       data['gambarUrl'].toString().isNotEmpty
-                  ? Image.network(
-                      data['gambarUrl'],
+                  ? CachedNetworkImage(
+                      imageUrl: data['gambarUrl'],
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          _buildImageError(),
+                      placeholder: (context, url) => Container(
+                        color: Colors.grey[200],
+                        child: const Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Color(0xFFDE3905),
+                          ),
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => _buildImageError(),
                     )
                   : _buildImageError(),
             ),
@@ -291,84 +300,163 @@ class _DetailMenuSeblakPageState extends State<DetailMenuSeblakPage> {
     );
   }
 
-  Widget _buildToppingRow(dynamic topping) {
-    String toppingGambarUrl = topping.gambarUrl ?? '';
+Widget _buildToppingRow(dynamic topping) {
+  String toppingGambarUrl = topping.gambarUrl ?? '';
+  // ✅ Cek stok topping
+  final bool isOutOfStock = (topping.stok as int? ?? 0) <= 0;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Row(
-        children: [
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.grey[100],
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x1A000000),
-                  blurRadius: 4,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(100),
-              child: toppingGambarUrl.isNotEmpty
-                  ? Image.network(
-                      toppingGambarUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          _buildRowPlaceholderIcon(),
-                    )
-                  : _buildRowPlaceholderIcon(),
-            ),
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 10),
+    child: Row(
+      children: [
+        // ✅ Gambar topping — abu-abu jika stok habis
+        Container(
+          width: 50,
+          height: 50,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.grey[100],
+            boxShadow: isOutOfStock
+                ? const []
+                : const [
+                    BoxShadow(
+                      color: Color(0x1A000000),
+                      blurRadius: 4,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  topping.nama,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF121212),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  CurrencyFormat.convertToIdr(topping.harga),
-                  style: const TextStyle(color: Colors.grey, fontSize: 12),
-                ),
-              ],
-            ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(100),
+            child: toppingGambarUrl.isNotEmpty
+                ? isOutOfStock
+                    // ✅ Abu-abu hanya di gambar, tidak merambat ke luar
+                    ? ColorFiltered(
+                        colorFilter: const ColorFilter.mode(
+                          Colors.grey,
+                          BlendMode.saturation,
+                        ),
+                        child: Opacity(
+                          opacity: 0.6,
+                          child: CachedNetworkImage(
+                            imageUrl: toppingGambarUrl,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Container(
+                              color: Colors.grey[200],
+                              child: const Center(
+                                child: SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Color(0xFFDE3905),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            errorWidget: (context, url, error) =>
+                                _buildRowPlaceholderIcon(),
+                          ),
+                        ),
+                      )
+                    : CachedNetworkImage(
+                        imageUrl: toppingGambarUrl,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => Container(
+                          color: Colors.grey[200],
+                          child: const Center(
+                            child: SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Color(0xFFDE3905),
+                              ),
+                            ),
+                          ),
+                        ),
+                        errorWidget: (context, url, error) =>
+                            _buildRowPlaceholderIcon(),
+                      )
+                : _buildRowPlaceholderIcon(),
           ),
-          _buildCircleQtyBtn(
-            Icons.remove,
-            () => toppingController.updateQuantity(topping.id, -1),
-          ),
-          Obx(
-            () => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              child: Text(
-                "${toppingController.getQuantity(topping.id)}",
+        ),
+        const SizedBox(width: 16),
+
+        // Nama dan harga topping
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                topping.nama,
                 style: const TextStyle(
-                  fontWeight: FontWeight.bold,
                   fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF121212), // Tetap hitam tegas
                 ),
               ),
-            ),
+              const SizedBox(height: 4),
+              Text(
+                CurrencyFormat.convertToIdr(topping.harga),
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey, // Tetap abu-abu normal
+                ),
+              ),
+            ],
           ),
-          _buildCircleQtyBtn(
-            Icons.add,
-            () => toppingController.updateQuantity(topping.id, 1),
-          ),
-        ],
-      ),
-    );
-  }
+        ),
+
+        // ==================== OPERATOR STOK / QUANTITY ====================
+        // 💡 PERBAIKAN: Teks "Out of Stock" diletakkan di sini untuk menggantikan tombol +/-
+        isOutOfStock
+            ? const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                child: Text(
+                  "Out of Stock",
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFFE53935), // Merah presisi
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              )
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildCircleQtyBtn(
+                    Icons.remove,
+                    () => toppingController.updateQuantity(topping.id, -1),
+                  ),
+                  Obx(
+                    () => Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: Text(
+                        "${toppingController.getQuantity(topping.id)}",
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Tombol + disabled jika quantity sudah mencapai limit stok
+                  Obx(() {
+                    final int currentQty = toppingController.getQuantity(topping.id);
+                    final bool isMaxStock = currentQty >= (topping.stok as int? ?? 0);
+                    return _buildCircleQtyBtn(
+                      Icons.add,
+                      () => toppingController.updateQuantity(topping.id, 1),
+                      isDisabled: isMaxStock,
+                    );
+                  }),
+                ],
+              ),
+      ],
+    ),
+  );
+}
 
   Widget _buildRowPlaceholderIcon() {
     return Container(
@@ -402,6 +490,7 @@ class _DetailMenuSeblakPageState extends State<DetailMenuSeblakPage> {
         const SizedBox(height: 15),
         CustomButton(
           text: isEditMode ? "Update Cart" : "Add to Cart",
+          icon: Icons.shopping_cart_outlined,
           onPressed: _handleAddToCart,
         ),
       ],
@@ -428,9 +517,7 @@ class _DetailMenuSeblakPageState extends State<DetailMenuSeblakPage> {
     if (validToppings.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text(
-            "Must choose at least 1 topping.",
-          ),
+          content: const Text("Must choose at least 1 topping."),
           backgroundColor: const Color(0xFFDE3905),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -496,17 +583,29 @@ class _DetailMenuSeblakPageState extends State<DetailMenuSeblakPage> {
     );
   }
 
-  Widget _buildCircleQtyBtn(IconData icon, VoidCallback onTap) {
+  Widget _buildCircleQtyBtn(
+    IconData icon,
+    VoidCallback onTap, {
+    bool isDisabled = false,
+  }) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: isDisabled ? null : onTap,
       child: Container(
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: const Color(0xFFFDECE8),
-          border: Border.all(color: const Color(0xFFF5CCC1)),
+          // ✅ Warna berubah saat disabled
+          color: isDisabled ? Colors.grey[200] : const Color(0xFFFDECE8),
+          border: Border.all(
+            color: isDisabled ? Colors.grey[300]! : const Color(0xFFF5CCC1),
+          ),
         ),
-        child: Icon(icon, size: 18, color: const Color(0xFFDE3905)),
+        child: Icon(
+          icon,
+          size: 18,
+          // ✅ Icon warna berubah saat disabled
+          color: isDisabled ? Colors.grey[400] : const Color(0xFFDE3905),
+        ),
       ),
     );
   }

@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:seblak_say_cafe/controllers/cart_controller.dart'; // 💡 Sesuaikan dengan path proyek Anda
+import 'package:seblak_say_cafe/utils/currency_format.dart';      // 💡 Menggunakan utilitas format rupiah Cafe Anda
 
 class QrisInstructionSheet extends StatelessWidget {
   final String orderId;
-  final double totalHarga;
 
   const QrisInstructionSheet({
     super.key,
     required this.orderId,
-    required this.totalHarga,
   });
 
-  // ✅ Static method untuk memanggil BottomSheet dari halaman QRIS
+  // ✅ Static method diperbarui (tidak perlu lagi melempar double totalHarga dari luar)
   static void show(
     BuildContext context, {
     required String orderId,
-    required double totalHarga,
   }) {
     showModalBottomSheet(
       context: context,
@@ -22,13 +22,18 @@ class QrisInstructionSheet extends StatelessWidget {
       isScrollControlled: true,
       builder: (_) => QrisInstructionSheet(
         orderId: orderId,
-        totalHarga: totalHarga,
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    // 💡 Hubungkan langsung ke CartController Anda
+    final CartController cartController = Get.find<CartController>();
+
+    // 💡 Ambil langsung nilai getter 'totalPrice' dari controller Anda
+    final int grandTotal = cartController.totalPrice;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
       decoration: const BoxDecoration(
@@ -52,7 +57,7 @@ class QrisInstructionSheet extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           const Text(
-            "Instruksi Pembayaran QRIS",
+            "QRIS Payment Instructions",
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -61,18 +66,18 @@ class QrisInstructionSheet extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           
-          // ✅ Step by Step QRIS lengkap beserta verifikasi akhir
           _buildStep("1", 
               "Pindai (Scan) kode QR yang tampil di layar menggunakan aplikasi e-wallet atau m-banking Anda."),
           const SizedBox(height: 12),
           _buildStep("2", 
-              "Pastikan nominal transfer yang muncul sesuai dengan total tagihan, yaitu Rp. ${totalHarga.toStringAsFixed(0)}."),
+              // 💡 Sekarang nominal otomatis terformat rapi sesuai kalkulasi subtotal + topping di cart
+              "Pastikan nominal transfer sesuai dengan total tagihan, yaitu ${CurrencyFormat.convertToIdr(grandTotal)}."),
           const SizedBox(height: 12),
           _buildStep("3", 
               "Selesaikan proses pembayaran di aplikasi Anda, lalu ambil tangkapan layar (screenshot) sebagai Bukti Transfer."),
           const SizedBox(height: 12),
           _buildStep("4", 
-              "Kembali ke aplikasi ini, unggah (upload) foto bukti transfer tersebut, lalu ketuk tombol verifikasi."),
+              "Kembali ke aplikasi ini, unggah (upload) foto bukti transfer tersebut, lalu ketuk tombol pay."),
           const SizedBox(height: 12),
           _buildStep("5", 
               "Kasir akan memverifikasi dan memproses pesanan Anda setelah pembayaran diterima."),
@@ -95,7 +100,7 @@ class QrisInstructionSheet extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
               child: const Text(
-                "Saya Mengerti",
+                "Understand",
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,

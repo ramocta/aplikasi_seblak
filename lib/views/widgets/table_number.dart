@@ -18,31 +18,48 @@ class TableNumber extends StatelessWidget {
         color: const Color(0xFFF6C453),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
       ),
-      // Membungkus Obx dengan Center agar teks berada di tengah Container
       child: Center(
         child: Obx(() {
           String displayText = "";
+          IconData? displayIcon; 
 
           if (orderController.selectedOrderType.value == "Dine In") {
             String table = orderController.tableNumber.value.isNotEmpty
                 ? "Table ${orderController.tableNumber.value}"
                 : "Table -";
             displayText = "$table | Dine In";
+            displayIcon = Icons.local_dining; 
           } else if (orderController.selectedOrderType.value == "Take Away") {
             displayText = "Take Away";
+            displayIcon = Icons.shopping_bag_outlined; 
           } else {
             displayText = "Pilih Tipe Pesanan";
+            displayIcon = null; 
           }
 
-          return Text(
-            displayText,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 16,
-              fontFamily: 'Rubik',
-              fontWeight: FontWeight.w400,
-              color: Color(0xFF333333),
-            ),
+          return Row(
+            mainAxisSize: MainAxisSize.min, 
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                displayText,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontFamily: 'Rubik',
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xFF333333),
+                ),
+              ),
+              if (displayIcon != null) ...[
+                const SizedBox(width: 8), // Jarak dipindah sebelum ikon
+                Icon(
+                  displayIcon,
+                  size: 18,
+                  color: const Color(0xFF333333), 
+                ),
+              ],
+            ],
           );
         }),
       ),

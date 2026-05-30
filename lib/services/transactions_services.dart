@@ -118,6 +118,30 @@ Future<TransactionDetailModel> getTransactionDetailCustomer(int id) async {
   }
 }
 
+Future<void> cancelOrDeleteTransaction(int id) async {
+    try {
+      final response = await ApiClient.dio.post(
+        // Sesuaikan dengan endpoint API Laravel Anda untuk membatalkan/menghapus transaksi
+        '${ApiConstants.cancelTransaction}/$id/cancel', // 💡 Sesuaikan dengan url endpoint Anda
+        options: Options(
+          headers: {'Accept': 'application/json'},
+        ),
+      );
+
+      // Cek apakah response sukses (200 OK atau 204 No Content)
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        return;
+      }
+      
+      throw Exception(response.data['message'] ?? 'Gagal menghapus pesanan dari server.');
+    } on DioException catch (e) {
+      print("❌ Error Cancel/Delete Transaction: ${e.message}");
+      throw Exception(
+        e.response?.data?['message'] ?? 'Gagal menghubungi server saat membatalkan pesanan.',
+      );
+    }
+  }
+
 
   Future<TransactionDetailModel> getTransactionDetail(int id) async {
     try {

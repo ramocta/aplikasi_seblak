@@ -41,40 +41,42 @@ class ToppingController extends GetxController
     super.onClose();
   }
 
-void initTabController(int length) {
-  if (length <= 0) return;
+  void initTabController(int length) {
+    if (length <= 0) return;
 
-  tabController?.dispose();
-  tabController = TabController(length: length, vsync: this);
+    tabController?.dispose();
+    tabController = TabController(length: length, vsync: this);
 
-  // ✅ Gunakan animation listener agar highlight responsif saat swipe
-  tabController!.animation?.addListener(() {
-    final int newIndex = tabController!.animation!.value.round();
+    // ✅ Gunakan animation listener agar highlight responsif saat swipe
+    tabController!.animation?.addListener(() {
+      final int newIndex = tabController!.animation!.value.round();
 
-    if (newIndex < 0 || newIndex >= listCategories.length) return;
-    if (newIndex == tabController!.index &&
-        selectedCategoryId.value == listCategories[newIndex].id) return;
+      if (newIndex < 0 || newIndex >= listCategories.length) return;
+      if (newIndex == tabController!.index &&
+          selectedCategoryId.value == listCategories[newIndex].id)
+        return;
 
-    final int activeCatId = listCategories[newIndex].id;
+      final int activeCatId = listCategories[newIndex].id;
 
-    // ✅ Update selectedCategoryId agar tab nav ikut highlight realtime
-    if (selectedCategoryId.value != activeCatId) {
-      selectedCategoryId.value = activeCatId;
-    }
-  });
+      // ✅ Update selectedCategoryId agar tab nav ikut highlight realtime
+      if (selectedCategoryId.value != activeCatId) {
+        selectedCategoryId.value = activeCatId;
+      }
+    });
 
-  // ✅ addListener untuk fetch data saat swipe selesai
-  tabController!.addListener(() {
-    if (tabController!.indexIsChanging) return;
-    if (tabController!.index < 0 ||
-        tabController!.index >= listCategories.length) return;
+    // ✅ addListener untuk fetch data saat swipe selesai
+    tabController!.addListener(() {
+      if (tabController!.indexIsChanging) return;
+      if (tabController!.index < 0 ||
+          tabController!.index >= listCategories.length)
+        return;
 
-    final int activeCatId = listCategories[tabController!.index].id;
-    if (selectedCategoryId.value != activeCatId) {
-      changeCategory(activeCatId);
-    }
-  });
-}
+      final int activeCatId = listCategories[tabController!.index].id;
+      if (selectedCategoryId.value != activeCatId) {
+        changeCategory(activeCatId);
+      }
+    });
+  }
 
   Future<void> initialLoad() async {
     try {
@@ -127,9 +129,7 @@ void initTabController(int length) {
       // ✅ SKIP jika dalam mode edit (skipServerSync = true)
       // =======================================================================
       if (skipServerSync) {
-        print(
-          "⏭️ [Topping] Skip sync server (Mode Edit). Gunakan data lokal.",
-        );
+        print("⏭️ [Topping] Skip sync server (Mode Edit). Gunakan data lokal.");
         return; // Jangan sync dari server
       }
 
@@ -182,15 +182,17 @@ void initTabController(int length) {
     List<KategoriToppingModels> categories,
   ) async {
     try {
-      // Siapkan daftar tugas penembakan API
       final tasks = categories
           .map((category) => _toppingService.getToppingByCategory(category.id))
           .toList();
 
-      // Jalankan seluruh tugas secara bersamaan di background
       final results = await Future.wait(tasks);
 
-      // Masukkan hasil data paralel ke dalam cache RAM dan Flat Map
+      // ✅ Clear cache lama dulu sebelum isi dengan data terbaru
+      // agar topping yang sudah dihapus di server tidak tersisa
+      _toppingCache.clear();
+      _allToppingsFlat.clear();
+
       for (int i = 0; i < categories.length; i++) {
         final categoryId = categories[i].id;
         final List<ToppingModels> toppings = results[i];
@@ -200,6 +202,18 @@ void initTabController(int length) {
         }
         _toppingCache[categoryId] = List.from(toppings);
       }
+
+      // ✅ Timpa local storage dengan data terbaru dari server
+      final flatListJson = _allToppingsFlat.values
+          .map((e) => e.toJson())
+          .toList();
+      _localStorage.write('all_toppings_flat', flatListJson);
+
+      // ✅ Timpa kategori di local storage juga
+      _localStorage.write(
+        'topping_categories',
+        categories.map((e) => e.toJson()).toList(),
+      );
     } catch (e) {
       print("❌ ERROR _fetchAllCategoriesParallel: $e");
     }
@@ -268,6 +282,16 @@ void initTabController(int length) {
   void updateQuantity(int toppingId, int delta) {
     int current = _selectedQuantities[toppingId] ?? 0;
     int newValue = current + delta;
+
+    // ✅ Jika delta positif (tambah), cek stok dulu
+    if (delta > 0) {
+      final topping = _allToppingsFlat[toppingId];
+      if (topping != null && newValue > topping.stok) {
+        // ✅ Tidak tambah jika melebihi stok
+        return;
+      }
+    }
+
     if (newValue >= 0) {
       _selectedQuantities[toppingId] = newValue;
     }
@@ -356,6 +380,10 @@ void initTabController(int length) {
   }
 
   Future<void> refreshData() async {
+    // ✅ Hapus local storage agar data lama tidak muncul lagi
+    _localStorage.remove('all_toppings_flat');
+    _localStorage.remove('topping_categories');
+
     _toppingCache.clear();
     _allToppingsFlat.clear();
     _selectedQuantities.clear();
@@ -363,17 +391,17 @@ void initTabController(int length) {
   }
 
   Future<void> deleteTopping(int id) async {
-  try {
-    final bool success = await _toppingService.deleteTopping(id);
-    
-    if (success) {
-      // ✅ Hapus dari list lokal langsung tanpa fetch ulang ke server
-      listTopping.removeWhere((t) => t.id == id);
-    } else {
-      throw Exception('Gagal menghapus topping.');
+    try {
+      final bool success = await _toppingService.deleteTopping(id);
+
+      if (success) {
+        // ✅ Hapus dari list lokal langsung tanpa fetch ulang ke server
+        listTopping.removeWhere((t) => t.id == id);
+      } else {
+        throw Exception('Gagal menghapus topping.');
+      }
+    } catch (e) {
+      rethrow; // ✅ Lempar kembali ke page untuk ditangkap try-catch di UI
     }
-  } catch (e) {
-    rethrow; // ✅ Lempar kembali ke page untuk ditangkap try-catch di UI
   }
-}
 }

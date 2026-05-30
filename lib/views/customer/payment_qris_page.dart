@@ -10,6 +10,7 @@ import 'package:seblak_say_cafe/core/constans/app_assets.dart';
 import '../../controllers/order_controller.dart';
 import '../widgets/qris_instruction_sheet.dart';
 import '../widgets/custom_button.dart';
+import '../widgets/menu_rectangle.dart';
 
 class PaymentQrisPage extends StatefulWidget {
   final String orderId;
@@ -29,7 +30,6 @@ class _PaymentQrisPageState extends State<PaymentQrisPage> {
   final OrderController orderController = Get.find<OrderController>();
   final ImagePicker _picker = ImagePicker();
 
-
   Uint8List? _imageBytes;
   File? _imageFile;
   bool _isLoading = false;
@@ -42,7 +42,6 @@ class _PaymentQrisPageState extends State<PaymentQrisPage> {
       );
 
       if (pickedFile != null) {
-
         if (kIsWeb) {
           final bytes = await pickedFile.readAsBytes();
           setState(() {
@@ -109,13 +108,11 @@ class _PaymentQrisPageState extends State<PaymentQrisPage> {
 
   Future<void> _downloadQRCode() async {
     try {
-      // ✅ Minta permission galeri dulu
       final bool hasAccess = await Gal.hasAccess();
       if (!hasAccess) {
         await Gal.requestAccess();
       }
 
-      // Baca asset QR Code sebagai bytes
       final ByteData data = await rootBundle.load(AppAssets.qrisCode);
       final Uint8List bytes = data.buffer.asUint8List();
 
@@ -135,23 +132,18 @@ class _PaymentQrisPageState extends State<PaymentQrisPage> {
           ),
         );
       } else {
-        // ✅ Simpan ke galeri via package gal
-        // Tulis ke file temp dulu baru simpan ke galeri
         final String tempPath =
             '${Directory.systemTemp.path}/qris_seblak_say.png';
         final File tempFile = File(tempPath);
         await tempFile.writeAsBytes(bytes);
 
-        // ✅ Simpan file temp ke galeri
         await Gal.putImage(tempPath, album: 'Seblak Say Cafe');
-
-        // Hapus file temp setelah berhasil
         await tempFile.delete();
 
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('QR Code berhasil disimpan ke galeri'),
+            content: const Text('Successfully saved to gallery'),
             backgroundColor: Colors.green[700],
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
@@ -161,9 +153,8 @@ class _PaymentQrisPageState extends State<PaymentQrisPage> {
         );
       }
     } on GalException catch (e) {
-      // ✅ Tangkap error spesifik dari package gal
       if (!mounted) return;
-      String message = 'Gagal menyimpan QR Code';
+      String message = 'Failed to save QR Code';
 
       switch (e.type) {
         case GalExceptionType.accessDenied:
@@ -189,8 +180,7 @@ class _PaymentQrisPageState extends State<PaymentQrisPage> {
           ),
         ),
       );
-     debugPrint('Gal error: ${e.toString()}');
-
+      debugPrint('Gal error: ${e.toString()}');
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -233,226 +223,218 @@ class _PaymentQrisPageState extends State<PaymentQrisPage> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 650),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(30),
-              topRight: Radius.circular(30),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black12,
-                blurRadius: 10,
-                offset: Offset(0, -2),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 28, 24, 32),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // QR Code
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[50],
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: MenuRectangle(
+                minHeight: constraints.maxHeight,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 28, 24, 32),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,  
+                    children: [
+                      // QR Code
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[50],
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.04),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Image.asset(
+                          AppAssets.qrisCode,
+                          width: 200,
+                          height: 200,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(
+                                Icons.qr_code_2,
+                                size: 200,
+                                color: Colors.black87,
+                              ),
+                        ),
                       ),
+                      const SizedBox(height: 12),
+
+                      // Tombol Unduh
+                      SizedBox(
+                        width: double.infinity,
+                        child: CustomButton(
+                          text: "Download QR Code",
+                          onPressed: _downloadQRCode,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        "Screenshot if QR Code cannot be downloaded",
+                        style: TextStyle(fontSize: 11, color: Colors.black54),
+                      ),
+                      const SizedBox(height: 28),
+
+                      // Upload Bukti Transfer
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          "Upload Proof of Transfer",
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      GestureDetector(
+                        onTap: _pickImage,
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          width: double.infinity,
+                          height: _hasImage ? 120 : 90,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[50],
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: _hasImage
+                                  ? const Color(0xFFDE3905)
+                                  : Colors.grey[300]!,
+                              width: 1.5,
+                            ),
+                          ),
+                          child: _hasImage
+                              ? Stack(
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: kIsWeb
+                                          ? Image.memory(
+                                              _imageBytes!,
+                                              width: double.infinity,
+                                              height: 120,
+                                              fit: BoxFit.cover,
+                                            )
+                                          : Image.file(
+                                              _imageFile!,
+                                              width: double.infinity,
+                                              height: 120,
+                                              fit: BoxFit.cover,
+                                            ),
+                                    ),
+                                    Positioned(
+                                      top: 6,
+                                      right: 6,
+                                      child: GestureDetector(
+                                        onTap: _removeImage,
+                                        child: Container(
+                                          padding: const EdgeInsets.all(3),
+                                          decoration: const BoxDecoration(
+                                            color: Colors.red,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(
+                                            Icons.close,
+                                            color: Colors.white,
+                                            size: 14,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.cloud_upload_outlined,
+                                      size: 28,
+                                      color: Colors.grey[400],
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      "Tap to upload proof of transfer",
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Instruksi Pembayaran
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          "Payment Instructions",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      GestureDetector(
+                        onTap: () => QrisInstructionSheet.show(
+                          context,
+                          orderId: widget.orderId, // 💡 Bersih: Tidak perlu mengirim grandTotal lagi dari sini
+                        ),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 16,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFDE3905),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "How to Make Payment",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Icon(
+                                Icons.keyboard_arrow_down,
+                                color: Colors.white,
+                                size: 22,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 32),
+
+                      // Tombol Pay
+                      CustomButton(
+                        text: _isLoading ? "Processing..." : "Pay",
+                        onPressed: isButtonActive ? _handlePayment : null,
+                      ),
+                      const SizedBox(height: 8),
                     ],
                   ),
-                  child: Image.asset(
-                    AppAssets.qrisCode,
-                    width: 200,
-                    height: 200,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => const Icon(
-                      Icons.qr_code_2,
-                      size: 200,
-                      color: Colors.black87,
-                    ),
-                  ),
                 ),
-                const SizedBox(height: 12),
-
-                // Tombol Unduh
-                SizedBox(
-                  width: double.infinity,
-                  child: CustomButton(
-                    text: "Unduh QR Code",
-                    onPressed: _downloadQRCode,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                const Text(
-                  "Screenshot jika QR Code tidak bisa di download",
-                  style: TextStyle(fontSize: 11, color: Colors.black54),
-                ),
-                const SizedBox(height: 28),
-
-                // Upload Bukti Transfer
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: const Text(
-                    "Upload Bukti Transfer",
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                GestureDetector(
-                  onTap: _pickImage,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: double.infinity,
-                    // ✅ Height lebih kecil
-                    height: _hasImage ? 120 : 90,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[50],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: _hasImage
-                            ? const Color(0xFFDE3905)
-                            : Colors.grey[300]!,
-                        width: 1.5,
-                      ),
-                    ),
-                    child: _hasImage
-                        ? Stack(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: kIsWeb
-                                    ? Image.memory(
-                                        _imageBytes!,
-                                        width: double.infinity,
-                                        height: 120,
-                                        fit: BoxFit.cover,
-                                      )
-                                    : Image.file(
-                                        _imageFile!,
-                                        width: double.infinity,
-                                        height: 120,
-                                        fit: BoxFit.cover,
-                                      ),
-                              ),
-                              Positioned(
-                                top: 6,
-                                right: 6,
-                                child: GestureDetector(
-                                  onTap: _removeImage,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(3),
-                                    decoration: const BoxDecoration(
-                                      color: Colors.red,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.close,
-                                      color: Colors.white,
-                                      size: 14,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          )
-                        : Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.cloud_upload_outlined,
-                                size: 28,
-                                color: Colors.grey[400],
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                "Ketuk untuk upload bukti transfer",
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                            ],
-                          ),
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // Instruksi Pembayaran
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: const Text(
-                    "Payment Instructions",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                GestureDetector(
-                  onTap: () => QrisInstructionSheet.show(
-                    context,
-                    orderId: widget.orderId,
-                    totalHarga: widget.totalHarga,
-                  ),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 16,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFDE3905),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "How to Make Payment",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Icon(
-                          Icons.keyboard_arrow_down,
-                          color: Colors.white,
-                          size: 22,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 32),
-
-                // Tombol Pay
-                CustomButton(
-                  text: _isLoading ? "Processing..." : "Pay",
-                  onPressed: isButtonActive ? _handlePayment : null,
-                ),
-                const SizedBox(height: 8),
-              ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }

@@ -109,7 +109,7 @@ class _AddMenuPageState extends State<AddMenuPage> {
       dio_lib.FormData formData = dio_lib.FormData.fromMap(payload);
 
       var response = await apiDio.post(
-        "http://localhost:8000/api/admin/menu", 
+        "http://192.168.18.171:8000/api/admin/menu", 
         data: formData,
         options: dio_lib.Options(
           headers: {

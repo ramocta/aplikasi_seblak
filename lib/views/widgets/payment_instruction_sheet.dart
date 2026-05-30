@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:seblak_say_cafe/utils/currency_format.dart'; 
 
 class PaymentInstructionSheet extends StatelessWidget {
   final String orderId;
@@ -50,7 +51,7 @@ class PaymentInstructionSheet extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           const Text(
-            "Instruksi Pembayaran",
+            "Payment Instructions",
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -62,7 +63,7 @@ class PaymentInstructionSheet extends StatelessWidget {
               "Tunjukkan ID pesanan Anda ($orderId) ke kasir."),
           const SizedBox(height: 12),
           _buildStep("2",
-              "Bayar total sebesar Rp. ${totalHarga.toStringAsFixed(0)} di kasir."),
+              "Bayar total sebesar ${CurrencyFormat.convertToIdr(totalHarga)} di kasir."),
           const SizedBox(height: 12),
           _buildStep("3",
               "Kasir akan memverifikasi dan memproses pesanan Anda setelah pembayaran diterima."),
@@ -82,7 +83,7 @@ class PaymentInstructionSheet extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
               child: const Text(
-                "Mengerti",
+                "Understand",
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
