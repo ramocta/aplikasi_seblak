@@ -16,9 +16,7 @@ class TableNumber extends StatelessWidget {
       height: 45,
       decoration: ShapeDecoration(
         color: const Color(0xFFF6C453),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(13),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(13)),
       ),
       // Membungkus Obx dengan Center agar teks berada di tengah Container
       child: Center(

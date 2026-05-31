@@ -7,7 +7,8 @@ class ToppingModels {
   final int stok;
   final String gambarUrl;
   final String lastUpdate;
-  final KategoriToppingModels? kategoritopping; 
+  final KategoriToppingModels kategoritopping;
+  int selectedQuantity;
 
   ToppingModels({
     required this.id,
@@ -16,41 +17,43 @@ class ToppingModels {
     required this.stok,
     required this.gambarUrl,
     required this.lastUpdate,
-    this.kategoritopping,
+    required this.kategoritopping,
+    this.selectedQuantity = 0,
   });
+
+  /// 🔴 SHORTCUT GETTER: Menyembuhkan error di ToppingController
+  /// Mengambil ID kategori langsung dari objek relasi di bawahnya
+  int get idKategoriTopping => kategoritopping.id;
 
   factory ToppingModels.fromJson(Map<String, dynamic> json) {
     return ToppingModels(
-      // SINKRONKAN DENGAN FIELD MYSQL LARAVEL: id_topping & nama_topping
-      id: json['id_topping'] ?? json['id'] ?? 0,
-      nama: json['nama_topping']?.toString() ?? json['nama']?.toString() ?? '', 
-      harga: int.tryParse(json['harga'].toString()) ?? 0,
-      stok: int.tryParse(json['stok'].toString()) ?? 0,
-      gambarUrl: json['gambar_url']?.toString() ?? '', 
-      lastUpdate: json['last_update']?.toString() ?? '',
-      kategoritopping: json['kategori'] != null 
-          ? KategoriToppingModels.fromJson(json['kategori']) 
-          : null,
+      id: json['id'] ?? 0,
+      nama: json['nama'] ?? '',
+      harga: json['harga'] ?? 0,
+      stok: json['stok'] ?? 0,
+      // Mengamankan pembacaan key snake_case dari Laravel maupun camelCase dari GetStorage lokal
+      gambarUrl: json['gambar_url'] ?? json['gambarUrl'] ?? '',
+      lastUpdate: json['last_update'] ?? json['lastUpdate'] ?? '-',
+      selectedQuantity: json['selected_quantity'] ?? json['selectedQuantity'] ?? 0,
+      
+      // Mengamankan nested object kategori agar tidak crash jika salah satu bernilai null
+      kategoritopping: KategoriToppingModels.fromJson(
+        json['kategori'] ?? json['kategoritopping'] ?? {'id': 0, 'nama': ''},
+      ),
     );
   }
 
-  ToppingModels copyWith({
-    int? id,
-    String? nama,
-    int? harga,
-    int? stok,
-    String? gambarUrl,
-    String? lastUpdate,
-    KategoriToppingModels? kategoritopping,
-  }) {
-    return ToppingModels(
-      id: id ?? this.id,
-      nama: nama ?? this.nama,
-      harga: harga ?? this.harga,
-      stok: stok ?? this.stok,
-      gambarUrl: gambarUrl ?? this.gambarUrl,
-      lastUpdate: lastUpdate ?? this.lastUpdate,
-      kategoritopping: kategoritopping ?? this.kategoritopping,
-    );
+  /// ✅ PERBAIKAN: Menyimpan objek utuh kategori agar saat dibaca ulang oleh GetStorage tidak null
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'nama': nama,
+      'harga': harga,
+      'stok': stok,
+      'gambarUrl': gambarUrl,
+      'lastUpdate': lastUpdate,
+      'selectedQuantity': selectedQuantity,
+      'kategoritopping': kategoritopping.toJson(), // 🔴 WAJIB: Ikut disimpan dalam bentuk Map
+    };
   }
 }

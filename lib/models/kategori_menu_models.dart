@@ -15,6 +15,13 @@ class KategoriMenuModels {
     );
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'id_kategori_menu': id,
+      'nama': nama,
+    };
+  }
+
   // Untuk memudahkan debugging
   @override
   String toString() {

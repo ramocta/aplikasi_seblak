@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:seblak_say_cafe/core/constans/app_assets.dart' show AppAssets;
 import 'package:seblak_say_cafe/core/constans/app_color.dart';
 
-
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -18,7 +17,7 @@ class _SplashScreenState extends State<SplashScreen> {
     // Logika untuk pindah ke halaman Welcome setelah 3 detik
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
-        context.go('/welcome'); 
+        context.go('/welcome');
       }
     });
   }
@@ -39,9 +38,7 @@ class _SplashScreenState extends State<SplashScreen> {
             ),
             const SizedBox(height: 20),
             // Opsional: Tambahkan Loading Indicator
-            const CircularProgressIndicator(
-              color: AppColors.primary,
-            ),
+            const CircularProgressIndicator(color: AppColors.primary),
           ],
         ),
       ),
