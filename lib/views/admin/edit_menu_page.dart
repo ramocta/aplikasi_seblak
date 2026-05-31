@@ -8,6 +8,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get/get.dart'; // Wajib di-import untuk clear cache GetX Controller
 import '../../models/menu_models.dart';
 import '../../controllers/menu_controller.dart' as getx; // Menggunakan alias agar tidak bentrok dengan TextEditingController
+import 'package:seblak_say_cafe/views/widgets/admin/edit_menu_photo_picker.dart';
+import 'package:seblak_say_cafe/views/widgets/admin/edit_menu_form_fields.dart';
+import 'package:seblak_say_cafe/views/widgets/admin/edit_menu_save_button.dart';
+
 
 class EditMenuPage extends StatefulWidget {
   final MenuModels menu;
@@ -198,122 +202,37 @@ class _EditMenuPageState extends State<EditMenuPage> {
                 children: [
                   const Text('Upload Foto Menu', style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
-                  GestureDetector(
-                    onTap: _pickImage,
-                    child: Container(
-                      width: double.infinity,
-                      height: 180,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF1F3F4),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade300),
-                        image: kIsWeb && _webImageBytes != null
-                            ? DecorationImage(image: MemoryImage(_webImageBytes!), fit: BoxFit.cover)
-                            : !kIsWeb && _imageFile != null
-                                ? DecorationImage(image: FileImage(_imageFile!), fit: BoxFit.cover)
-                                : (widget.menu.gambarUrl.isNotEmpty && widget.menu.gambarUrl.startsWith('http'))
-                                    ? DecorationImage(image: NetworkImage(widget.menu.gambarUrl), fit: BoxFit.cover)
-                                    : null, 
-                      ),
-                      child: _webImageBytes == null && _imageFile == null && (!widget.menu.gambarUrl.startsWith('http'))
-                          ? const Center(child: Icon(Icons.camera_alt, size: 40, color: Colors.grey))
-                          : const Stack(
-                              children: [
-                                Positioned(
-                                  bottom: 12, right: 12,
-                                  child: CircleAvatar(
-                                    backgroundColor: Colors.white,
-                                    radius: 18,
-                                    child: Icon(Icons.edit, size: 16, color: Color(0xFFE64A19)),
-                                  ),
-                                ),
-                              ],
-                            ),
-                    ),
+
+                  EditMenuPhotoPicker(
+                    imageFile: _imageFile,
+                    webImageBytes: _webImageBytes,
+                    webImageName: _webImageName,
+                    gambarUrl: widget.menu.gambarUrl,
+                    onPickImage: _pickImage,
                   ),
+
                   const SizedBox(height: 20),
 
-                  _buildLabel("Nama Produk"),
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: _inputDecoration(),
-                    validator: (v) => v!.isEmpty ? "Nama tidak boleh kosong" : null,
-                  ),
-                  const SizedBox(height: 16),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildLabel("Kategori"),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
-                              decoration: BoxDecoration(
-                                color: Colors.white, 
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: Colors.grey.shade200),
-                              ),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<int>(
-                                  value: _categoriesMap.values.contains(_selectedCategoryId) ? _selectedCategoryId : _categoriesMap.values.first,
-                                  isExpanded: true,
-                                  onChanged: (val) => setState(() => _selectedCategoryId = val),
-                                  items: _categoriesMap.entries.map((e) => DropdownMenuItem(value: e.value, child: Text(e.key))).toList(),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildLabel("Stok"),
-                            TextFormField(
-                              controller: _stockController,
-                              keyboardType: TextInputType.number,
-                              decoration: _inputDecoration(),
-                              validator: (v) => v!.isEmpty ? "Stok wajib diisi" : null,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  _buildLabel("Harga (IDR)"),
-                  TextFormField(
-                    controller: _priceController,
-                    keyboardType: TextInputType.number,
-                    decoration: _inputDecoration().copyWith(prefixText: 'Rp '),
-                    validator: (v) {
+                  EditMenuFormFields(
+                    nameController: _nameController,
+                    priceController: _priceController,
+                    stockController: _stockController,
+                    selectedCategoryId: _selectedCategoryId,
+                    categoriesMap: _categoriesMap,
+                    onChangedCategory: (val) => setState(() => _selectedCategoryId = val),
+                    nameValidator: (v) => v!.isEmpty ? "Nama tidak boleh kosong" : null,
+                    stockValidator: (v) => v!.isEmpty ? "Stok wajib diisi" : null,
+                    priceValidator: (v) {
                       if (v!.isEmpty) return "Harga wajib diisi";
                       String digits = v.replaceAll(RegExp(r'[^0-9]'), '');
                       if (digits.isEmpty) return "Format harga salah";
                       return null;
                     },
                   ),
-                  const SizedBox(height: 32),
 
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFE64A19),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                      onPressed: _saveChanges,
-                      child: const Text(
-                        'Simpan Perubahan', 
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)
-                      ),
-                    ),
+                  EditMenuSaveButton(
+                    isLoading: _isLoading,
+                    onPressed: _saveChanges,
                   ),
                 ],
               ),
@@ -321,17 +240,4 @@ class _EditMenuPageState extends State<EditMenuPage> {
           ),
     );
   }
-
-  Widget _buildLabel(String text) => Padding(
-    padding: const EdgeInsets.only(bottom: 8.0),
-    child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-  );
-
-  InputDecoration _inputDecoration() => InputDecoration(
-    filled: true,
-    fillColor: Colors.white,
-    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE64A19), width: 1.5)),
-    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.grey.shade200)),
-  );
 }

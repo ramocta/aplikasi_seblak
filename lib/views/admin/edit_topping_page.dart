@@ -6,8 +6,11 @@ import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart' as dio;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get/get.dart';
-import '../../models/topping_models.dart'; 
-import '../../controllers/topping_controller.dart'; 
+import '../../models/topping_models.dart';
+import '../../controllers/topping_controller.dart';
+import 'package:seblak_say_cafe/views/widgets/admin/edit_topping_photo_picker.dart';
+import 'package:seblak_say_cafe/views/widgets/admin/edit_topping_form_fields.dart';
+import 'package:seblak_say_cafe/views/widgets/admin/edit_topping_save_button.dart';
 
 class EditToppingPage extends StatefulWidget {
   final ToppingModels topping; 
@@ -170,93 +173,24 @@ class _EditToppingPageState extends State<EditToppingPage> {
                 children: [
                   const Text('Upload Foto Topping', style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 10),
-                  GestureDetector(
-                    onTap: _pickImage,
-                    child: Container(
-                      width: double.infinity,
-                      height: 180,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF1F3F4),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade300),
-                        image: kIsWeb && _webImageBytes != null
-                            ? DecorationImage(image: MemoryImage(_webImageBytes!), fit: BoxFit.cover)
-                            : !kIsWeb && _imageFile != null
-                                ? DecorationImage(image: FileImage(_imageFile!), fit: BoxFit.cover)
-                                : (widget.topping.gambarUrl.isNotEmpty && widget.topping.gambarUrl.startsWith('http'))
-                                    ? DecorationImage(image: NetworkImage(widget.topping.gambarUrl), fit: BoxFit.cover)
-                                    : null,
-                      ),
-                      child: _webImageBytes == null && _imageFile == null && (!widget.topping.gambarUrl.startsWith('http'))
-                          ? const Center(child: Icon(Icons.camera_alt, size: 40, color: Colors.grey))
-                          : const Stack(children: [Positioned(bottom: 12, right: 12, child: CircleAvatar(backgroundColor: Colors.white, radius: 18, child: Icon(Icons.edit, size: 16, color: Color(0xFFE64A19))))]),
-                    ),
+                  EditToppingPhotoPicker(
+                    imageFile: _imageFile,
+                    webImageBytes: _webImageBytes,
+                    webImageName: _webImageName,
+                    gambarUrl: widget.topping.gambarUrl,
+                    onPickImage: _pickImage,
                   ),
                   const SizedBox(height: 20),
-                  _buildLabel("Nama Topping"),
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: _inputDecoration(),
-                    validator: (v) => v!.isEmpty ? "Nama wajib diisi" : null,
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildLabel("Kategori"),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
-                              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.grey.shade200)),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<int>(
-                                  value: _selectedCategoryId,
-                                  isExpanded: true,
-                                  onChanged: (val) => setState(() => _selectedCategoryId = val!),
-                                  items: _categoryMap.entries.map((e) => DropdownMenuItem(value: e.value, child: Text(e.key))).toList(),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildLabel("Stok"),
-                            TextFormField(
-                              controller: _stockController,
-                              keyboardType: TextInputType.number,
-                              decoration: _inputDecoration(),
-                              validator: (v) => v!.isEmpty ? "Stok wajib diisi" : null,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  _buildLabel("Harga (IDR)"),
-                  TextFormField(
-                    controller: _priceController,
-                    keyboardType: TextInputType.number,
-                    decoration: _inputDecoration().copyWith(prefixText: 'Rp '),
-                    validator: (v) => v!.isEmpty ? "Harga wajib diisi" : null,
+                  EditToppingFormFields(
+                    nameController: _nameController,
+                    priceController: _priceController,
+                    stockController: _stockController,
+                    selectedCategoryId: _selectedCategoryId,
+                    categoryMap: _categoryMap,
+                    onChangedCategory: (val) => setState(() => _selectedCategoryId = val),
                   ),
                   const SizedBox(height: 32),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE64A19), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-                      onPressed: _saveChanges,
-                      child: const Text('Simpan Perubahan', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                    ),
-                  ),
+                  EditToppingSaveButton(onPressed: _saveChanges),
                 ],
               ),
             ),

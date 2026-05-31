@@ -8,8 +8,12 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get/get.dart';
 import '../../controllers/menu_controller.dart' as getx; 
+import 'package:seblak_say_cafe/views/widgets/admin/add_menu_photo_picker.dart';
+import 'package:seblak_say_cafe/views/widgets/admin/add_menu_form_fields.dart';
+import 'package:seblak_say_cafe/views/widgets/admin/add_menu_save_button.dart';
 
 class AddMenuPage extends StatefulWidget {
+
   const AddMenuPage({super.key});
 
   @override
@@ -194,155 +198,37 @@ class _AddMenuPageState extends State<AddMenuPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // --- UPLOAD FOTO (MATCH FIGMA) ---
                   const Text(
                     'upload menu photo', 
                     style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: Colors.black)
                   ),
                   const SizedBox(height: 10),
-                  GestureDetector(
-                    onTap: _pickImage,
-                    child: Container(
-                      width: double.infinity,
-                      height: 200,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF5F5F5),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFFE0E0E0).withOpacity(0.6)),
-                        image: kIsWeb && _webImageBytes != null 
-                          ? DecorationImage(image: MemoryImage(_webImageBytes!), fit: BoxFit.cover)
-                          : !kIsWeb && _imageFile != null
-                            ? DecorationImage(image: FileImage(_imageFile!), fit: BoxFit.cover)
-                            : null,
-                      ),
-                      child: _webImageBytes == null && _imageFile == null 
-                        ? Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(
-                                Icons.add_a_photo_outlined, 
-                                size: 38, 
-                                color: Color(0xFFE64A19)
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                'Tap to upload image', 
-                                style: TextStyle(
-                                  color: Colors.grey.shade500, 
-                                  fontSize: 15, 
-                                  fontWeight: FontWeight.w500
-                                )
-                              ),
-                            ],
-                          )
-                        : const Stack(
-                            children: [
-                              Positioned(
-                                bottom: 12, right: 12,
-                                child: CircleAvatar(
-                                  backgroundColor: Colors.white,
-                                  radius: 18,
-                                  child: Icon(Icons.edit, size: 16, color: Color(0xFFE64A19)),
-                                ),
-                              ),
-                            ],
-                          ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
 
-                  // --- MENU NAME ---
-                  _buildLabel("Menu Name"),
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: _inputDecoration(hint: 'Enter the menu name'),
-                    validator: (v) => v!.trim().isEmpty ? "Menu name is required" : null,
+                  AddMenuPhotoPicker(
+                    imageFile: _imageFile,
+                    webImageBytes: _webImageBytes,
+                    webImageName: _webImageName,
+                    onPickImage: _pickImage,
                   ),
-                  const SizedBox(height: 20),
 
-                  // --- ROW CATEGORY & STOCK ---
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // DROPDOWN CATEGORY
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildLabel("Category"),
-                            Container(
-                              height: 54,
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF1F3F4), 
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<int>(
-                                  value: _categoriesMap.values.contains(_selectedCategoryId) ? _selectedCategoryId : _categoriesMap.values.first,
-                                  isExpanded: true,
-                                  icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey.shade600),
-                                  style: const TextStyle(color: Colors.black87, fontSize: 15),
-                                  onChanged: (val) => setState(() => _selectedCategoryId = val),
-                                  items: _categoriesMap.entries.map((e) => DropdownMenuItem(value: e.value, child: Text(e.key))).toList(),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      // INPUT STOCK
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildLabel("Stock"),
-                            TextFormField(
-                              controller: _stockController,
-                              keyboardType: TextInputType.number,
-                              decoration: _inputDecoration(hint: '0'),
-                              validator: (v) => v!.trim().isEmpty ? "Required" : null,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-
-                  // --- PRICE ---
-                  _buildLabel("Price (Rp)"),
-                  TextFormField(
-                    controller: _priceController,
-                    keyboardType: TextInputType.number,
-                    decoration: _inputDecoration(hint: 'Rp  0'),
-                    validator: (v) {
+                  AddMenuFormFields(
+                    nameController: _nameController,
+                    priceController: _priceController,
+                    stockController: _stockController,
+                    selectedCategoryId: _selectedCategoryId,
+                    categoriesMap: _categoriesMap,
+                    onChangedCategory: (val) => setState(() => _selectedCategoryId = val),
+                    nameValidator: (v) => v!.trim().isEmpty ? "Menu name is required" : null,
+                    stockValidator: (v) => v!.trim().isEmpty ? "Required" : null,
+                    priceValidator: (v) {
                       if (v!.isEmpty) return "Price is required";
                       String digits = v.replaceAll(RegExp(r'[^0-9]'), '');
                       if (digits.isEmpty) return "Invalid price format";
                       return null;
                     },
                   ),
-                  const SizedBox(height: 44),
 
-                  // --- ACTION BUTTON SAVE ---
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFE64A19), // Orange Figma
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      ),
-                      onPressed: _saveMenu,
-                      child: const Text(
-                        'Save', 
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)
-                      ),
-                    ),
-                  ),
+                  AddMenuSaveButton(onPressed: _saveMenu),
                 ],
               ),
             ),
@@ -350,31 +236,5 @@ class _AddMenuPageState extends State<AddMenuPage> {
     );
   }
 
-  Widget _buildLabel(String text) => Padding(
-    padding: const EdgeInsets.only(bottom: 8.0),
-    child: Text(
-      text, 
-      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black)
-    ),
-  );
 
-  InputDecoration _inputDecoration({required String hint}) => InputDecoration(
-    hintText: hint,
-    hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 15),
-    filled: true,
-    fillColor: const Color(0xFFF1F3F4), // Abu-abu background figma
-    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(16), 
-      borderSide: BorderSide.none
-    ),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(16), 
-      borderSide: BorderSide.none
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(16), 
-      borderSide: const BorderSide(color: Color(0xFFE64A19), width: 1.5)
-    ),
-  );
 }

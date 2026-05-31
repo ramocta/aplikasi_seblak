@@ -5,6 +5,8 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import '../../../controllers/order_controller.dart';
+import 'package:seblak_say_cafe/views/widgets/admin/receipt_preview.dart';
+import 'package:seblak_say_cafe/views/widgets/admin/receipt_actions.dart';
 
 class PrintReceiptPage extends StatefulWidget {
   final String orderId;
@@ -182,67 +184,13 @@ class _PrintReceiptPageState extends State<PrintReceiptPage> {
                           const Text("-------------------------------------------------------------------------", style: TextStyle(color: Colors.black12)),
                           const SizedBox(height: 8),
 
-                          // Render Daftar Menu & Topping di UI Aplikasi
-                          ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: items.length,
-                            itemBuilder: (context, index) {
-                              final item = items[index];
-                              if (item == null) return const SizedBox.shrink();
-
-                              String namaMenu = item['nama_menu'] ?? item['menu']?['nama_menu'] ?? "Menu";
-                              int qty = int.tryParse(item['qty']?.toString() ?? item['jumlah']?.toString() ?? "1") ?? 1;
-                              double hargaSatuan = double.tryParse(item['harga_satuan']?.toString() ?? item['menu']?['harga']?.toString() ?? "0") ?? 0.0;
-                              double totalHargaItem = hargaSatuan * qty;
-
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 10),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text("$qty" "x $namaMenu", style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87)),
-                                        Text("Rp${totalHargaItem.toInt()}", style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                                      ],
-                                    ),
-                                    // Render data topping pendukung secara dinamis di bawahnya
-                                    if (item['toppings'] != null || item['pesanan_toppings'] != null)
-                                      ...((item['toppings'] ?? item['pesanan_toppings'] ?? []) as List).map((t) {
-                                        String namaTopping = t['nama_topping'] ?? t['topping']?['nama_topping'] ?? "Topping";
-                                        return Padding(
-                                          padding: const EdgeInsets.only(left: 14, top: 2),
-                                          child: Text("+ $namaTopping", style: const TextStyle(fontSize: 12, color: Colors.black54, fontStyle: FontStyle.italic)),
-                                        );
-                                      }).toList(),
-                                  ],
-                                ),
-                              );
-                            },
+                          ReceiptPreview(
+                            items: items,
+                            subtotal: subtotal,
+                            grandTotal: grandTotal,
+                            orderId: widget.orderId,
                           ),
-
-                          const Text("-------------------------------------------------------------------------", style: TextStyle(color: Colors.black12)),
-                          const SizedBox(height: 6),
-
-                          // Bagian Ringkasan Harga (SINKRON DENGAN DATA TOTAL HARGA CONTROLLER)
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text("Subtotal", style: TextStyle(fontSize: 14, color: Colors.black54)),
-                              Text("Rp${subtotal.toInt()}", style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text("TOTAL BAYAR", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black)),
-                              Text("Rp${grandTotal.toInt()}", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFFD84315))),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
+                          
                         ],
                       ),
                     ),

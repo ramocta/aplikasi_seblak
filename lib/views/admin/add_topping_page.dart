@@ -6,6 +6,9 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart'; // Library untuk ambil foto dari galeri
 import 'package:seblak_say_cafe/controllers/topping_controller.dart';
 import 'package:seblak_say_cafe/services/topping_services.dart';
+import 'package:seblak_say_cafe/views/widgets/admin/add_topping_photo_picker.dart';
+import 'package:seblak_say_cafe/views/widgets/admin/add_topping_form_fields.dart';
+import 'package:seblak_say_cafe/views/widgets/admin/add_topping_save_button.dart';
 
 class AddToppingPage extends StatefulWidget {
   const AddToppingPage({super.key});
@@ -155,147 +158,29 @@ class _AddToppingPageState extends State<AddToppingPage> {
                 children: [
                   // --- UPLOAD FOTO (MATCH FIGMA) ---
                   const Text(
-                    "upload topping photo", 
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: Colors.black)
+                    "upload topping photo",
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: Colors.black),
                   ),
                   const SizedBox(height: 10),
-                  GestureDetector(
-                    onTap: _pickImage,
-                    child: Container(
-                      width: double.infinity,
-                      height: 200,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF5F5F5),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFFE0E0E0).withOpacity(0.6)),
-                        image: _webImage != null 
-                            ? DecorationImage(image: MemoryImage(_webImage!), fit: BoxFit.cover)
-                            : (_pickedImage != null 
-                                ? DecorationImage(image: FileImage(_pickedImage!), fit: BoxFit.cover)
-                                : null),
-                      ),
-                      child: _webImage == null && _pickedImage == null
-                          ? Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(
-                                  Icons.add_a_photo_outlined, 
-                                  size: 38, 
-                                  color: Color(0xFFE64A19)
-                                ),
-                                const SizedBox(height: 10),
-                                Text(
-                                  "Tap to upload image", 
-                                  style: TextStyle(
-                                    color: Colors.grey.shade500, 
-                                    fontSize: 15, 
-                                    fontWeight: FontWeight.w500
-                                  )
-                                ),
-                              ],
-                            )
-                          : const Stack(
-                              children: [
-                                Positioned(
-                                  bottom: 12, right: 12,
-                                  child: CircleAvatar(
-                                    backgroundColor: Colors.white,
-                                    radius: 18,
-                                    child: Icon(Icons.edit, size: 16, color: Color(0xFFE64A19)),
-                                  ),
-                                ),
-                              ],
-                            ),
-                    ),
+                  AddToppingPhotoPicker(
+                    imageFile: _pickedImage,
+                    webImageBytes: _webImage,
+                    onPickImage: _pickImage,
                   ),
                   const SizedBox(height: 24),
 
-                  // --- TOPPING NAME ---
-                  _buildLabel("Topping Name"),
-                  _buildTextField(_nameController, "Example: Cheese Dumpling", TextInputType.text),
-                  const SizedBox(height: 20),
-
-                  // --- ROW CATEGORY & STOCK ---
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // DROPDOWN CATEGORY
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildLabel("Category"),
-                            Container(
-                              height: 54,
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF1F3F4), 
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: _toppingController.listCategories.isEmpty
-                                  ? const Align(
-                                      alignment: Alignment.centerLeft,
-                                      child: Text("Empty", style: TextStyle(color: Colors.red, fontSize: 14)),
-                                    )
-                                  : DropdownButtonHideUnderline(
-                                      child: DropdownButton<int>(
-                                        value: _toppingController.listCategories.any((cat) => cat.id == _selectedCategoryId)
-                                            ? _selectedCategoryId
-                                            : _toppingController.listCategories.first.id,
-                                        isExpanded: true,
-                                        icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey.shade600),
-                                        style: const TextStyle(color: Colors.black87, fontSize: 15),
-                                        onChanged: (val) => setState(() => _selectedCategoryId = val),
-                                        items: _toppingController.listCategories.map((cat) {
-                                          return DropdownMenuItem<int>(
-                                            value: cat.id,
-                                            child: Text(cat.nama),
-                                          );
-                                        }).toList(),
-                                      ),
-                                    ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      
-                      // INPUT STOCK
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildLabel("Stock"),
-                            _buildTextField(_stockController, "100", TextInputType.number),
-                          ],
-                        ),
-                      ),
-                    ],
+                  AddToppingFormFields(
+                    nameController: _nameController,
+                    priceController: _priceController,
+                    stockController: _stockController,
+                    selectedCategoryId: _selectedCategoryId,
+                    categories: _toppingController.listCategories,
+                    onChangedCategoryId: (val) => setState(() => _selectedCategoryId = val),
+                    nameValidator: (v) => v!.isEmpty ? "Topping name wajib diisi" : null,
                   ),
-                  const SizedBox(height: 20),
-
-                  // --- PRICE ---
-                  _buildLabel("Price (Rp)"),
-                  _buildTextField(_priceController, "2000", TextInputType.number),
                   const SizedBox(height: 44),
 
-                  // --- ACTION BUTTON SAVE ---
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: ElevatedButton(
-                      onPressed: _saveTopping,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFE64A19), // Orange Figma
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      ),
-                      child: const Text(
-                        "Save", 
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)
-                      ),
-                    ),
-                  ),
+                  AddToppingSaveButton(onPressed: _saveTopping),
                 ],
               ),
             ),

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart' hide MenuController;
 import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 import 'package:seblak_say_cafe/controllers/topping_controller.dart' as topping_controller;
+import 'package:seblak_say_cafe/views/widgets/admin/topping_category_tabs.dart';
+import 'package:seblak_say_cafe/views/widgets/admin/topping_tile.dart';
+import 'package:seblak_say_cafe/views/widgets/admin/topping_delete_dialog.dart';
 
 class ToppingPage extends StatefulWidget {
   const ToppingPage({super.key});
@@ -9,6 +12,7 @@ class ToppingPage extends StatefulWidget {
   @override
   State<ToppingPage> createState() => _ToppingPageState();
 }
+
 
 class _ToppingPageState extends State<ToppingPage> {
   final topping_controller.ToppingController controller = Get.put(topping_controller.ToppingController());
@@ -49,23 +53,12 @@ class _ToppingPageState extends State<ToppingPage> {
           );
         }
 
-        return Column(
+    return Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16.0),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: Row(
-                  children: controller.listCategories.map((cat) {
-                    return _buildCategoryTab(
-                      label: cat.nama,
-                      isActive: controller.selectedCategoryId.value == cat.id,
-                      onTap: () => controller.changeCategory(cat.id),
-                    );
-                  }).toList(),
-                ),
-              ),
+            ToppingCategoryTabs(
+              categories: controller.listCategories,
+              selectedCategoryId: controller.selectedCategoryId.value,
+              onTap: (id) => controller.changeCategory(id),
             ),
 
             Expanded(
@@ -75,14 +68,19 @@ class _ToppingPageState extends State<ToppingPage> {
                 child: controller.listTopping.isEmpty
                     ? const Center(child: Text("Tidak ada topping di kategori ini"))
                     : ListView.builder(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 80), 
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
                         itemCount: controller.listTopping.length,
                         itemBuilder: (context, index) {
                           final topping = controller.listTopping[index];
-                          return _buildToppingTile(
-                            context,
+                          return ToppingTile(
                             controller: controller,
                             topping: topping,
+                            onEdit: () => context.go('/edit_topping', extra: topping),
+                            onDelete: () => ToppingDeleteDialog.show(
+                              context: context,
+                              controller: controller,
+                              topping: topping,
+                            ),
                           );
                         },
                       ),
