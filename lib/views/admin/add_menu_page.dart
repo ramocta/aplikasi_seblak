@@ -7,13 +7,13 @@ import 'package:dio/dio.dart' as dio_lib;
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get/get.dart';
+import 'package:seblak_say_cafe/core/constans/api_constans.dart';
 import '../../controllers/menu_controller.dart' as getx; 
 import 'package:seblak_say_cafe/views/widgets/admin/add_menu_photo_picker.dart';
 import 'package:seblak_say_cafe/views/widgets/admin/add_menu_form_fields.dart';
 import 'package:seblak_say_cafe/views/widgets/admin/add_menu_save_button.dart';
 
 class AddMenuPage extends StatefulWidget {
-
   const AddMenuPage({super.key});
 
   @override
@@ -73,11 +73,7 @@ class _AddMenuPageState extends State<AddMenuPage> {
   Future<void> _saveMenu() async {
     if (!_formKey.currentState!.validate()) return;
     
-    if (kIsWeb && _webImageBytes == null) {
-      _showSnackBar("Foto menu wajib diupload!", Colors.red);
-      return;
-    }
-    if (!kIsWeb && _imageFile == null) {
+    if (kIsWeb ? (_webImageBytes == null) : (_imageFile == null)) {
       _showSnackBar("Foto menu wajib diupload!", Colors.red);
       return;
     }
@@ -91,29 +87,19 @@ class _AddMenuPageState extends State<AddMenuPage> {
       
       String cleanPrice = _priceController.text.trim().replaceAll(RegExp(r'[^0-9]'), '');
 
-      Map<String, dynamic> payload = {
+      // Membuat FormData
+      dio_lib.FormData formData = dio_lib.FormData.fromMap({
         'nama_menu': _nameController.text.trim(),
         'id_kategori_menu': _selectedCategoryId.toString(),
         'harga': cleanPrice,
         'stok': _stockController.text.trim(),
-      };
-
-      if (kIsWeb && _webImageBytes != null) {
-        payload['gambar'] = dio_lib.MultipartFile.fromBytes(
-          _webImageBytes!,
-          filename: _webImageName ?? 'menu_${DateTime.now().millisecondsSinceEpoch}.jpg',
-        );
-      } else if (!kIsWeb && _imageFile != null) {
-        payload['gambar'] = await dio_lib.MultipartFile.fromFile(
-          _imageFile!.path,
-          filename: _imageFile!.path.split('/').last,
-        );
-      }
-
-      dio_lib.FormData formData = dio_lib.FormData.fromMap(payload);
+        'gambar': kIsWeb 
+            ? dio_lib.MultipartFile.fromBytes(_webImageBytes!, filename: _webImageName ?? 'menu.jpg')
+            : await dio_lib.MultipartFile.fromFile(_imageFile!.path, filename: _imageFile!.path.split('/').last),
+      });
 
       var response = await apiDio.post(
-        "http://localhost:8000/api/admin/menu", 
+        "${ApiConstants.baseUrl}${ApiConstants.adminMenu}",
         data: formData,
         options: dio_lib.Options(
           headers: {
@@ -127,36 +113,20 @@ class _AddMenuPageState extends State<AddMenuPage> {
       if (response.statusCode == 200 || response.statusCode == 201) {
         if (!mounted) return;
 
-        try {
-          if (Get.isRegistered<getx.MenuController>()) {
-            final menuCtrl = Get.find<getx.MenuController>();
-            menuCtrl.clearCache(); 
-          }
-        } catch (e) {
-          print("Gagal menghapus cache GetX: $e");
+        // Refresh cache GetX
+        if (Get.isRegistered<getx.MenuController>()) {
+          Get.find<getx.MenuController>().clearCache();
         }
 
         _showSnackBar("Berhasil menyimpan menu baru!", Colors.green);
-        
-        if (context.canPop()) {
-          context.pop();
-        } else {
-          context.go('/menu_management');
-        }
-      } else if (response.statusCode == 401) {
-        throw Exception("Sesi login habis (401). Silakan login kembali.");
+        context.canPop() ? context.pop() : context.go('/menu_management');
       } else {
-        throw Exception("Gagal merespon server: Code ${response.statusCode}\nDetail: ${response.data}");
+        throw Exception("Gagal menyimpan: ${response.statusCode} - ${response.data}");
       }
     } catch (e) {
-      print("Detail Error: $e");
-      if (mounted) {
-        _showSnackBar(e.toString().replaceAll("Exception:", ""), Colors.red);
-      }
+      if (mounted) _showSnackBar(e.toString().replaceAll("Exception:", ""), Colors.red);
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -171,46 +141,29 @@ class _AddMenuPageState extends State<AddMenuPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        titleSpacing: 0,
-        title: const Text(
-          'Add Menu', 
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20)
-        ),
+        title: const Text('Add Menu', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black, size: 24),
-          onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go('/menu_management');
-            }
-          },
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => context.canPop() ? context.pop() : context.go('/menu_management'),
         ),
       ),
       body: _isLoading 
         ? const Center(child: CircularProgressIndicator(color: Color(0xFFD84315)))
         : SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+            padding: const EdgeInsets.all(24.0),
             child: Form(
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'upload menu photo', 
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: Colors.black)
-                  ),
+                  const Text('Upload Menu Photo', style: TextStyle(fontWeight: FontWeight.w600)),
                   const SizedBox(height: 10),
-
                   AddMenuPhotoPicker(
                     imageFile: _imageFile,
                     webImageBytes: _webImageBytes,
                     webImageName: _webImageName,
                     onPickImage: _pickImage,
                   ),
-
                   AddMenuFormFields(
                     nameController: _nameController,
                     priceController: _priceController,
@@ -222,12 +175,9 @@ class _AddMenuPageState extends State<AddMenuPage> {
                     stockValidator: (v) => v!.trim().isEmpty ? "Required" : null,
                     priceValidator: (v) {
                       if (v!.isEmpty) return "Price is required";
-                      String digits = v.replaceAll(RegExp(r'[^0-9]'), '');
-                      if (digits.isEmpty) return "Invalid price format";
-                      return null;
+                      return v.replaceAll(RegExp(r'[^0-9]'), '').isEmpty ? "Invalid format" : null;
                     },
                   ),
-
                   AddMenuSaveButton(onPressed: _saveMenu),
                 ],
               ),
@@ -235,6 +185,4 @@ class _AddMenuPageState extends State<AddMenuPage> {
           ),
     );
   }
-
-
 }

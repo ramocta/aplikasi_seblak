@@ -50,9 +50,14 @@ class MonthlyRevenueCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Obx(() => Text(
-                  "Rp ${controller.monthlyRevenue.value}",
-                  style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
-                )),
+              // Menggunakan calculatedRevenue agar hitung otomatis dari recentActivities
+              "Rp ${controller.calculatedRevenue.toStringAsFixed(0)}",
+              style: const TextStyle(
+                color: Colors.white, 
+                fontSize: 32, 
+                fontWeight: FontWeight.bold
+              ),
+            )),
             const SizedBox(height: 4),
             const Row(
               children: [

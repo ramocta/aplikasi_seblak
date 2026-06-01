@@ -142,13 +142,14 @@ class _PrintReceiptPageState extends State<PrintReceiptPage> {
         ),
       ),
       backgroundColor: Colors.white, // Menjamin full layar putih bersih polosan tanpa background abu-abu
-      body: isGenerating
+            body: isGenerating
           ? const Center(
               child: CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE64A19)),
               ),
             )
           : Column(
+              mainAxisSize: MainAxisSize.max,
               children: [
                 // =========================================================================
                 // VIEW PRATINJAU: MENGGUNAKAN FLUTTER WIDGET BIASA (RESPONSIF & PUTIH POLOS)
@@ -158,45 +159,16 @@ class _PrintReceiptPageState extends State<PrintReceiptPage> {
                     padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
                     child: Container(
                       color: Colors.white,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Center(
-                            child: Text(
-                              "Say Cafe",
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: Colors.black),
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          const Center(
-                            child: Text("Stall #04 - Food Junction Central", style: TextStyle(fontSize: 12, color: Colors.black54)),
-                          ),
-                          const SizedBox(height: 15),
-                          const Text("-------------------------------------------------------------------------", style: TextStyle(color: Colors.black12)),
-                          
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text("Order ID: #SB-${widget.orderId.padLeft(4, '0')}", style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                              Text(DateTime.now().toString().substring(0, 16).replaceAll('-', '/'), style: const TextStyle(fontSize: 12, color: Colors.black54)),
-                            ],
-                          ),
-                          const Text("-------------------------------------------------------------------------", style: TextStyle(color: Colors.black12)),
-                          const SizedBox(height: 8),
-
-                          ReceiptPreview(
-                            items: items,
-                            subtotal: subtotal,
-                            grandTotal: grandTotal,
-                            orderId: widget.orderId,
-                          ),
-                          
-                        ],
+                      child: ReceiptPreview(
+                        items: items,
+                        subtotal: subtotal,
+                        grandTotal: grandTotal,
+                        orderId: widget.orderId,
                       ),
                     ),
                   ),
                 ),
-                
+
                 // =========================================================================
                 // LAYOUT TOMBOL AKSI STABIL DI BAGIAN BAWAH KERTAS
                 // =========================================================================
@@ -209,7 +181,7 @@ class _PrintReceiptPageState extends State<PrintReceiptPage> {
                       // Tombol 1: CETAK PDF
                       ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFD84315), 
+                          backgroundColor: const Color(0xFFD84315),
                           minimumSize: const Size.fromHeight(50),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                           elevation: 0,
@@ -227,14 +199,14 @@ class _PrintReceiptPageState extends State<PrintReceiptPage> {
                       OutlinedButton(
                         style: OutlinedButton.styleFrom(
                           minimumSize: const Size.fromHeight(50),
-                          side: BorderSide.none, 
+                          side: BorderSide.none,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                          backgroundColor: const Color(0xFFE0E0E0), 
+                          backgroundColor: const Color(0xFFE0E0E0),
                         ),
                         // DIUBAH DISINI: Dari context.pop() menjadi context.go('/dashboard')
                         onPressed: () => context.go('/dashboard'),
                         child: const Text(
-                          "Back to Dashboard", 
+                          "Back to Dashboard",
                           style: TextStyle(color: Colors.black54, fontWeight: FontWeight.bold, fontSize: 14),
                         ),
                       ),

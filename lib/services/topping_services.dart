@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Wajib ada untuk SharedPreferences
 import 'package:seblak_say_cafe/core/api/api_client.dart';
 import 'package:seblak_say_cafe/core/constans/api_constans.dart';
 import '../models/kategori_topping_models.dart';
@@ -59,7 +61,7 @@ class ToppingService {
       throw Exception('Terjadi kesalahan saat mengambil topping');
     }
   }
-}
+
   // ==================== ADMIN ONLY ====================
 
   /// Tambah Topping Baru (Admin) - MENGGUNAKAN FORMDATA (MULTIPART)

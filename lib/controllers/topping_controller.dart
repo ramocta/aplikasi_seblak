@@ -361,4 +361,31 @@ void initTabController(int length) {
     _selectedQuantities.clear();
     await initialLoad();
   }
+
+  /// Hapus Topping (Method untuk UI/View)
+  Future<void> deleteTopping(int id) async {
+    try {
+      isLoading(true); // Tampilkan loading
+      
+      // 1. Panggil service untuk eksekusi API Delete
+      bool success = await _toppingService.deleteTopping(id);
+      
+      if (success) {
+        // 2. Jika sukses, hapus dari list lokal agar UI terupdate instan
+        listTopping.removeWhere((item) => item.id == id);
+        _allToppingsFlat.remove(id);
+        
+        // 3. Update cache jika perlu
+        _rebuildToppingCacheFromFlat();
+        
+        print("✅ Topping dengan ID $id berhasil dihapus.");
+      }
+    } catch (e) {
+      errorMessage.value = "Gagal menghapus: $e";
+      print("❌ ERROR deleteTopping controller: $e");
+      rethrow; // Lempar error agar bisa ditangkap oleh UI (SnackBar)
+    } finally {
+      isLoading(false); // Matikan loading
+    }
+  }
 }

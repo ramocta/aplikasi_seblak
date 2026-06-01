@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:get/get.dart'; 
+import 'package:seblak_say_cafe/core/constans/api_constans.dart';
 import 'package:shared_preferences/shared_preferences.dart'; 
 import 'package:go_router/go_router.dart';
 import '../../controllers/order_controller.dart';
@@ -27,7 +28,7 @@ class _LoginPageState extends State<LoginPage> {
   String? _error;
   bool _isLoading = false;
 
-  // --- FUNGSI LOGIN ORIGINAL (KODINGAN LAMA LU YANG BISA LOGIN) ---
+  // --- FUNGSI LOGIN YANG SUDAH DIPERBAIKI ---
   Future<void> _login() async {
     if (_username.text.isEmpty || _password.text.isEmpty) {
       setState(() => _error = "Username & Password wajib diisi!");
@@ -40,8 +41,11 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
+      // Gabungkan baseUrl dengan endpoint login dari ApiConstants
+      final String url = "${ApiConstants.baseUrl}${ApiConstants.login}";
+      
       final response = await http.post(
-        Uri.parse("http://localhost:8000/api/admin/login"), // Dikembalikan ke localhost bawaan lu bang
+        Uri.parse(url), 
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',

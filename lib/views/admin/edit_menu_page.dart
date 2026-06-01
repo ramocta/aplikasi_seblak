@@ -5,21 +5,18 @@ import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart' as dio;
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:get/get.dart'; // Wajib di-import untuk clear cache GetX Controller
+import 'package:get/get.dart';
+import 'package:seblak_say_cafe/core/constans/api_constans.dart';
 import '../../models/menu_models.dart';
-import '../../controllers/menu_controller.dart' as getx; // Menggunakan alias agar tidak bentrok dengan TextEditingController
+import '../../controllers/menu_controller.dart' as getx;
 import 'package:seblak_say_cafe/views/widgets/admin/edit_menu_photo_picker.dart';
 import 'package:seblak_say_cafe/views/widgets/admin/edit_menu_form_fields.dart';
 import 'package:seblak_say_cafe/views/widgets/admin/edit_menu_save_button.dart';
 
-
 class EditMenuPage extends StatefulWidget {
   final MenuModels menu;
 
-  const EditMenuPage({
-    super.key,
-    required this.menu,
-  });
+  const EditMenuPage({super.key, required this.menu});
 
   @override
   State<EditMenuPage> createState() => _EditMenuPageState();
@@ -48,8 +45,9 @@ class _EditMenuPageState extends State<EditMenuPage> {
   @override
   void initState() {
     super.initState();
+    // Menggunakan widget.menu untuk mengakses data dari StatefulWidget
     _nameController = TextEditingController(text: widget.menu.nama);
-    // Bersihkan nilai harga awal dari teks 'Rp', titik, atau spasi bawaan model data
+    
     String initialPrice = widget.menu.harga.toString().replaceAll(RegExp(r'[^0-9]'), '');
     _priceController = TextEditingController(text: initialPrice);
     _stockController = TextEditingController(text: widget.menu.stok.toString());
@@ -89,23 +87,19 @@ class _EditMenuPageState extends State<EditMenuPage> {
     
     try {
       dio.Dio apiDio = dio.Dio();
-
       final prefs = await SharedPreferences.getInstance();
       String? tokenAdmin = prefs.getString('token');
 
-      // 1. Bersihkan string harga dari karakter non-angka
       String cleanPrice = _priceController.text.trim().replaceAll(RegExp(r'[^0-9]'), '');
 
-      // 2. KUNCI SUKSES: Key disesuaikan 100% dengan $fillable di Model Laravel backend lu bang!
       Map<String, dynamic> payload = {
-        'nama_menu': _nameController.text.trim(),        // Sesuai dengan database Laravel
-        'id_kategori_menu': _selectedCategoryId.toString(), // Sesuai dengan database Laravel
+        'nama_menu': _nameController.text.trim(),
+        'id_kategori_menu': _selectedCategoryId.toString(),
         'harga': cleanPrice,
         'stok': _stockController.text.trim(),
-        '_method': 'PUT', // Spoofing PUT agar dibaca sebagai Update oleh Route::apiResource
+        '_method': 'PUT', 
       };
 
-      // 3. Masukkan FILE GAMBAR dengan key 'gambar' sesuai $fillable Laravel
       if (kIsWeb && _webImageBytes != null) {
         payload['gambar'] = dio.MultipartFile.fromBytes(
           _webImageBytes!,
@@ -120,29 +114,27 @@ class _EditMenuPageState extends State<EditMenuPage> {
 
       dio.FormData formData = dio.FormData.fromMap(payload);
 
-      // 4. Eksekusi POST biasa ke endpoint Laravel
       dio.Response response = await apiDio.post(
-        "http://localhost:8000/api/admin/menu/${widget.menu.id}",
+        "${ApiConstants.baseUrl}${ApiConstants.adminMenu}/${widget.menu.id}",
         data: formData,
         options: dio.Options(
           headers: {
             'Accept': 'application/json',
-            if (tokenAdmin != null) 'Authorization': 'Bearer $tokenAdmin', 
+            'X-HTTP-Method-Override': 'PUT', // Penting untuk Laravel agar menangkap PUT
+            if (tokenAdmin != null) 'Authorization': 'Bearer $tokenAdmin',
           },
-          validateStatus: (status) => status! < 500, 
+          validateStatus: (status) => status! < 500,
         ),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         if (mounted) {
-          // 5. Hapus cache GetX biar data terbaru langsung ditarik dari database MySQL
           try {
             if (Get.isRegistered<getx.MenuController>()) {
-              final menuCtrl = Get.find<getx.MenuController>();
-              menuCtrl.clearCache(); 
+              Get.find<getx.MenuController>().clearCache();
             }
           } catch (e) {
-            print("Gagal menghapus cache GetX: $e");
+            debugPrint("Cache GetX tidak ditemukan: $e");
           }
 
           ScaffoldMessenger.of(context).showSnackBar(
@@ -150,31 +142,22 @@ class _EditMenuPageState extends State<EditMenuPage> {
           );
           context.go('/menu_management'); 
         }
-      } else if (response.statusCode == 401) {
-        throw Exception("Sesi login habis (401). Silakan logout dan login kembali.");
-      } else if (response.statusCode == 404) {
-        throw Exception("Menu ID tidak ditemukan atau rute salah (404).");
       } else {
-        throw Exception("Gagal merespon server: Code ${response.statusCode}\nDetail: ${response.data}");
+        throw Exception("Gagal merespon server: ${response.statusCode}");
       }
-
     } catch (e) {
       if (mounted) {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
             title: const Text("Gagal Menyimpan"),
-            content: Text(e.toString().replaceAll("Exception:", "")),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(context), child: const Text("OK"))
-            ],
+            content: Text(e.toString()),
+            actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text("OK"))],
           ),
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -183,26 +166,20 @@ class _EditMenuPageState extends State<EditMenuPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text('Edit Menu', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: const Text('Edit Menu', style: TextStyle(fontWeight: FontWeight.bold)),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/menu_management'), 
         ),
       ),
       body: _isLoading 
-        ? const Center(child: CircularProgressIndicator(color: Color(0xFFE64A19)))
+        ? const Center(child: CircularProgressIndicator())
         : SingleChildScrollView(
             padding: const EdgeInsets.all(20.0),
             child: Form(
               key: _formKey,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Upload Foto Menu', style: TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
-
                   EditMenuPhotoPicker(
                     imageFile: _imageFile,
                     webImageBytes: _webImageBytes,
@@ -210,9 +187,7 @@ class _EditMenuPageState extends State<EditMenuPage> {
                     gambarUrl: widget.menu.gambarUrl,
                     onPickImage: _pickImage,
                   ),
-
                   const SizedBox(height: 20),
-
                   EditMenuFormFields(
                     nameController: _nameController,
                     priceController: _priceController,
@@ -220,16 +195,10 @@ class _EditMenuPageState extends State<EditMenuPage> {
                     selectedCategoryId: _selectedCategoryId,
                     categoriesMap: _categoriesMap,
                     onChangedCategory: (val) => setState(() => _selectedCategoryId = val),
-                    nameValidator: (v) => v!.isEmpty ? "Nama tidak boleh kosong" : null,
+                    nameValidator: (v) => v!.isEmpty ? "Nama wajib diisi" : null,
                     stockValidator: (v) => v!.isEmpty ? "Stok wajib diisi" : null,
-                    priceValidator: (v) {
-                      if (v!.isEmpty) return "Harga wajib diisi";
-                      String digits = v.replaceAll(RegExp(r'[^0-9]'), '');
-                      if (digits.isEmpty) return "Format harga salah";
-                      return null;
-                    },
+                    priceValidator: (v) => v!.isEmpty ? "Harga wajib diisi" : null,
                   ),
-
                   EditMenuSaveButton(
                     isLoading: _isLoading,
                     onPressed: _saveChanges,

@@ -244,4 +244,9 @@ void initTabController(int length) {
     _menuCache.clear();
     await initialLoad();
   }
+  
+  /// Getter untuk mengambil list menu dari cache berdasarkan kategori
+  List<MenuModels> getMenusByCategory(int categoryId) {
+    return _menuCache[categoryId] ?? [];
+  }
 }

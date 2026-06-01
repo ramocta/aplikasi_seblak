@@ -481,6 +481,36 @@ class OrderController extends GetxController {
     return total;
   }
 
+  double get calculatedRevenue {
+    double total = 0;
+    for (var activity in recentActivities) {
+      // Pastikan statusnya 'done' sebelum dihitung
+      var status = (activity['status_pesanan'] ?? activity['status'] ?? '').toString().toLowerCase();
+      
+      if (status == 'done') {
+        // Kita gunakan fungsi hitungTotalOrder yang sudah Anda buat di atas
+        // agar perhitungan total harga per transaksi akurat
+        total += hitungTotalOrder(Map<String, dynamic>.from(activity));
+      }
+    }
+    return total;
+  }
+
+  /// Membuat ringkasan menu untuk tampilan di OrderCard
+  String getMenuSummary(Map<String, dynamic> order) {
+    // Sesuaikan kunci map 'pesanan_menus' dengan struktur JSON dari API Anda
+    final items = order['pesanan_menus'] ?? order['items'] ?? [];
+    
+    if (items is! List || items.isEmpty) return "Tidak ada item";
+
+    // Mengambil nama menu dari setiap item dan menggabungkannya
+    return items.map((item) {
+      final menuName = item['menu']?['nama_menu'] ?? 'Menu';
+      final qty = item['qty'] ?? item['jumlah'] ?? 1;
+      return "$menuName ($qty)";
+    }).join(', ');
+  }
+
   Future<void> fetchDashboardStats({
     String? status,
   }) async {
@@ -538,12 +568,68 @@ class OrderController extends GetxController {
             ) ??
             0;
       }
+
+      // Ambil list transaksi untuk dashboard/OrderPage
+      // backend: getTransactionHistory($status) => GET /admin/history?status=
+      await fetchOrders(status: status);
     } catch (e) {
       debugPrint(
         "Gagal sinkron data dashboard: $e",
       );
     } finally {
       isLoading(false);
+    }
+  }
+
+  Future<void> fetchOrders({
+    String? status,
+  }) async {
+    try {
+      final prefs =
+          await SharedPreferences.getInstance();
+
+      String? token = prefs.getString('token');
+
+      if (token == null || token.isEmpty) return;
+
+      final query = <String, dynamic>{};
+      if (status != null && status.isNotEmpty &&
+          status != 'all') {
+        query['status'] = status;
+      }
+
+      final response = await ApiClient.dio.get(
+        '/admin/history',
+        queryParameters:
+            query.isEmpty ? null : query,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Accept': 'application/json',
+          },
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        final resBody = response.data;
+        final data =
+            resBody is Map
+                ? (resBody['data'] ?? resBody['transactions'] ?? [])
+                : resBody;
+
+        if (data is List) {
+          recentActivities.assignAll(data);
+        } else {
+          recentActivities.clear();
+        }
+      } else {
+        recentActivities.clear();
+      }
+    } catch (e) {
+      debugPrint(
+        "Gagal ambil order admin: $e",
+      );
+      recentActivities.clear();
     }
   }
 

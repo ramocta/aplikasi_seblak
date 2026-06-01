@@ -10,7 +10,7 @@ import 'package:seblak_say_cafe/views/customer/checkout_page.dart';
 import 'package:seblak_say_cafe/views/customer/payment_qris_page.dart';
 import 'package:seblak_say_cafe/views/customer/order_option_page.dart';
 import 'package:seblak_say_cafe/views/customer/table_number_screen.dart';
-import 'package:seblak_say_cafe/views/customer/katalog_menu.dart';
+import 'package:seblak_say_cafe/views/customer/katalog_menu.dart' as customer;
 import 'package:seblak_say_cafe/views/customer/detail_menu.dart';
 import 'package:seblak_say_cafe/views/customer/detail_menu_seblak.dart';
 import 'package:seblak_say_cafe/views/customer/detail_transaction_page.dart';
@@ -28,7 +28,7 @@ import 'package:seblak_say_cafe/views/admin/add_topping_page.dart';
 import 'package:seblak_say_cafe/views/admin/edit_menu_page.dart';
 import 'package:seblak_say_cafe/views/admin/edit_topping_page.dart';
 import 'package:seblak_say_cafe/views/admin/login_page.dart';
-import 'package:seblak_say_cafe/views/admin/menu_page.dart';
+import 'package:seblak_say_cafe/views/admin/menu_page.dart' as admin;
 import 'package:seblak_say_cafe/views/admin/notifications_page.dart';
 import 'package:seblak_say_cafe/views/admin/order_detail_page.dart';
 import 'package:seblak_say_cafe/views/admin/order_page.dart';
@@ -86,7 +86,8 @@ class AppRouter {
 
       GoRoute(
         path: '/menu',
-        builder: (context, state) => const MenuPage(),
+        // Ganti MenuPage() menjadi customer.MenuPage()
+        builder: (context, state) => const customer.MenuPage(), 
       ),
 
       GoRoute(
@@ -205,7 +206,8 @@ class AppRouter {
 
           GoRoute(
             path: '/menu_management',
-            builder: (context, state) => const MenuPage(),
+            // Ganti MenuPage() menjadi admin.MenuPage()
+            builder: (context, state) => const admin.MenuPage(), 
           ),
 
           GoRoute(

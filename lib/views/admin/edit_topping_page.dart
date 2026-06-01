@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart' as dio;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:get/get.dart';
+import 'package:seblak_say_cafe/core/constans/api_constans.dart';
 import '../../models/topping_models.dart';
 import '../../controllers/topping_controller.dart';
 import 'package:seblak_say_cafe/views/widgets/admin/edit_topping_photo_picker.dart';
@@ -108,14 +109,18 @@ class _EditToppingPageState extends State<EditToppingPage> {
       dio.FormData formData = dio.FormData.fromMap(payload);
 
       dio.Response response = await apiDio.post(
-        "http://localhost:8000/api/admin/topping/${widget.topping.id}",
+        // Menggabungkan baseUrl dan endpoint adminTopping
+        "${ApiConstants.baseUrl}${ApiConstants.adminTopping}/${widget.topping.id}",
         data: formData,
         options: dio.Options(
           headers: {
             'Accept': 'application/json',
-            if (tokenAdmin != null) 'Authorization': 'Bearer $tokenAdmin', 
+            // Jika Anda melakukan update gambar via POST di Laravel, 
+            // terkadang perlu menambahkan method override jika API Anda bersifat PUT/PATCH
+            'X-HTTP-Method-Override': 'PUT', 
+            if (tokenAdmin != null) 'Authorization': 'Bearer $tokenAdmin',
           },
-          validateStatus: (status) => status! < 500, 
+          validateStatus: (status) => status! < 500,
         ),
       );
 

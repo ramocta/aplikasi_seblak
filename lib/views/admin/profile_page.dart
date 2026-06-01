@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:seblak_say_cafe/core/constans/api_constans.dart';
 
 class ProfilePage extends StatefulWidget {
   final Map<String, dynamic>? userData;
@@ -19,18 +21,26 @@ class _ProfilePageState extends State<ProfilePage> {
     setState(() => _isLoggingOut = true);
 
     try {
+      // Gunakan ApiConstants untuk URL yang dinamis
+      final String url = "${ApiConstants.baseUrl}${ApiConstants.logout}";
+      
       await http.post(
-        Uri.parse("http://10.0.2.2:8000/api/logout"),
+        Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
           'Authorization': 'Bearer ${widget.userData?['token']}',
         },
       ).timeout(const Duration(seconds: 5));
+      
     } catch (e) {
       debugPrint("Server error during logout: $e");
     } finally {
       if (mounted) {
+        // PENTING: Bersihkan SharedPreferences/Token lokal sebelum berpindah halaman
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('token'); 
+        
         setState(() => _isLoggingOut = false);
         context.go('/login');
       }
